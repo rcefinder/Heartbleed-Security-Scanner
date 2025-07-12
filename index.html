@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heartbleed Security Scanner PRO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0f0f15;
+            --secondary: #1a1a24;
+            --accent: #e53e3e;
+            --accent-dark: #c53030;
+            --danger: #ff4d4d;
+            --success: #38a169;
+            --warning: #f6ad55;
+            --info: #4299e1;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a24 100%);
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            border-bottom: 2px solid #f56565;
+        }
+        
+        .card {
+            background: var(--secondary);
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(229, 62, 62, 0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, var(--accent), var(--accent-dark));
+            color: #ffffff;
+            border: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+            border: 1px solid rgba(229, 62, 62, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(to right, var(--accent-dark), var(--accent));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(to right, #4a5568, #2d3748);
+            color: #ffffff;
+            border: none;
+            border: 1px solid #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(to right, #2d3748, #4a5568);
+            transform: translateY(-2px);
+        }
+        
+        .result-critical { 
+            background-color: rgba(229, 62, 62, 0.15); 
+            border-left: 4px solid var(--danger);
+        }
+        .result-warning { 
+            background-color: rgba(221, 107, 32, 0.15); 
+            border-left: 4px solid var(--warning);
+        }
+        .result-success { 
+            background-color: rgba(56, 161, 105, 0.15); 
+            border-left: 4px solid var(--success);
+        }
+        .result-info { 
+            background-color: rgba(66, 153, 225, 0.15); 
+            border-left: 4px solid var(--info);
+        }
+        
+        .modal-content {
+            background: var(--secondary);
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .target-frame {
+            border: 2px solid #4a5568;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .results-container {
+            max-height: 400px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #e53e3e #2d3748;
+        }
+        
+        .results-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .results-container::-webkit-scrollbar-track {
+            background: #2d3748;
+            border-radius: 4px;
+        }
+        
+        .results-container::-webkit-scrollbar-thumb {
+            background: #e53e3e;
+            border-radius: 4px;
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(229, 62, 62, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); }
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: #e53e3e;
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 3px;
+        }
+        
+        .test-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            margin-bottom: 5px;
+        }
+        
+        .test-status {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .status-pending {
+            background: #f6ad55;
+        }
+        
+        .status-success {
+            background: #38a169;
+        }
+        
+        .status-failed {
+            background: #e53e3e;
+        }
+        
+        .status-running {
+            background: #4299e1;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .bookmark-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: #f6ad55;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-4 md:p-6">
+        <!-- Header -->
+        <header class="header p-6 mb-6 rounded-xl relative">
+            <button id="bookmarkBtn" class="bookmark-btn">
+                <i class="far fa-bookmark"></i>
+            </button>
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+                        <i class="fas fa-heartbeat"></i> Heartbleed Security Scanner PRO
+                    </h1>
+                    <p class="text-sm text-red-200 mt-2">Расширенный инструмент для тестирования веб-уязвимостей</p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="status-badge bg-red-900 text-red-300">
+                        <i class="fas fa-circle mr-1 text-xs"></i> <span id="status">Готов</span>
+                    </div>
+                    <div class="status-badge bg-red-800 text-red-200">
+                        <i class="fas fa-vial mr-1"></i> <span id="testsCounter">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex flex-col md:flex-row gap-4">
+                <input id="targetInput" type="text" value="https://example.com" 
+                    class="flex-grow p-3 bg-red-900 bg-opacity-50 border border-red-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" 
+                    placeholder="Введите URL цели">
+                <button id="scanUrl" class="btn-primary p-3 rounded-lg flex items-center justify-center pulse">
+                    <i class="fas fa-bolt"></i> Сканировать
+                </button>
+            </div>
+            
+            <div class="progress-bar mt-4" id="globalProgress"></div>
+        </header>
+
+        <!-- CORS Warning -->
+        <div class="mb-6 bg-red-900 bg-opacity-30 p-4 rounded-lg text-red-200 flex items-start gap-3 border border-red-700">
+            <i class="fas fa-exclamation-triangle mt-1 text-red-400"></i>
+            <p>Используется CORS-прокси для обхода ограничений. Для сложных тестов используйте браузерное расширение.</p>
+        </div>
+
+        <!-- Test Sections -->
+        <div class="test-grid">
+            <!-- Быстрые действия -->
+            <section class="card p-5">
+                <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                    <i class="fas fa-bolt text-red-400"></i> Быстрые действия
+                </h2>
+                <div class="space-y-3">
+                    <button id="runAllTests" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-play-circle"></i> Запустить все тесты
+                    </button>
+                    <button id="viewSource" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-code"></i> Просмотр исходного кода
+                    </button>
+                    <button id="wafTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-shield-virus"></i> Проверка WAF
+                    </button>
+                    <button id="headerTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-heading"></i> Проверка заголовков
+                    </button>
+                    <button id="subdomainTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-sitemap"></i> Сканирование субдоменов
+                    </button>
+                    <button id="cookieTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-cookie-bite"></i> Проверка Cookies
+                    </button>
+                </div>
+            </section>
+
+            <!-- Основные тесты -->
+            <section class="card p-5">
+                <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                    <i class="fas fa-star text-red-400"></i> Основные тесты
+                </h2>
+                <div class="space-y-3">
+                    <button id="postMessageTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-envelope"></i> postMessage
+                    </button>
+                    <button id="xssTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-bug"></i> XSS
+                    </button>
+                    <button id="openRedirectTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-external-link-alt"></i> Open Redirect
+                    </button>
+                    <button id="corsTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-unlock-alt"></i> CORS
+                    </button>
+                    <button id="csrfTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-link"></i> CSRF
+                    </button>
+                    <button id="cspTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-shield-alt"></i> CSP
+                    </button>
+                </div>
+            </section>
+
+            <!-- Дополнительные тесты -->
+            <section class="card p-5">
+                <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                    <i class="fas fa-cog text-red-400"></i> Дополнительные тесты
+                </h2>
+                <div class="space-y-3">
+                    <button id="lfiTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-file"></i> LFI/RFI
+                    </button>
+                    <button id="idorTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-id-card"></i> IDOR
+                    </button>
+                    <button id="sqliTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-database"></i> SQL Injection
+                    </button>
+                    <button id="ssrfTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-server"></i> SSRF
+                    </button>
+                    <button id="xxeTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-file-code"></i> XXE
+                    </button>
+                    <button id="fileUploadTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-upload"></i> File Upload
+                    </button>
+                </div>
+            </section>
+
+            <!-- Утилиты -->
+            <section class="card p-5">
+                <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                    <i class="fas fa-tools text-red-400"></i> Утилиты
+                </h2>
+                <div class="space-y-3">
+                    <button id="encodePayload" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-lock"></i> Кодировать Payload
+                    </button>
+                    <button id="decodePayload" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-lock-open"></i> Декодировать Payload
+                    </button>
+                    <button id="bruteForceTest" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-key"></i> Brute Force
+                    </button>
+                    <button id="dnsLookup" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-globe"></i> DNS Lookup
+                    </button>
+                    <button id="whoisLookup" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-info-circle"></i> WHOIS Lookup
+                    </button>
+                    <button id="portScanner" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-network-wired"></i> Сканер портов
+                    </button>
+                    <button id="hashGenerator" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-hashtag"></i> Генератор хешей
+                    </button>
+                    <button id="exportResults" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-file-export"></i> Экспорт результатов
+                    </button>
+                </div>
+            </section>
+            
+            <!-- Пятая колонка: Расширенные инструменты -->
+            <section class="card p-5">
+                <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                    <i class="fas fa-rocket text-red-400"></i> Расширенные инструменты
+                </h2>
+                <div class="space-y-3">
+                    <button id="clickjackingTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-mouse-pointer"></i> Clickjacking
+                    </button>
+                    <button id="jwtTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-key"></i> JWT Анализ
+                    </button>
+                    <button id="sessionTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-user-lock"></i> Сессионная безопасность
+                    </button>
+                    <button id="idBruteTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-fingerprint"></i> Перебор ID
+                    </button>
+                    <button id="graphqlTest" class="btn-primary w-full p-3 rounded-lg">
+                        <i class="fas fa-project-diagram"></i> GraphQL Инъекция
+                    </button>
+                    <button id="payloadGenerator" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-code"></i> Генератор Payload
+                    </button>
+                    <button id="responseDiff" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-exchange-alt"></i> Сравнение ответов
+                    </button>
+                    <button id="responseParser" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-paragraph"></i> Парсер HTTP
+                    </button>
+                    <button id="jwtDecoder" class="btn-secondary w-full p-3 rounded-lg">
+                        <i class="fas fa-unlock"></i> Декодер JWT
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Results Section -->
+        <div class="mt-8">
+            <div class="card p-6 rounded-lg mb-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
+                    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-laptop-code text-red-400"></i> Целевой сайт
+                    </h2>
+                    <div class="text-sm text-gray-400 truncate max-w-md bg-red-900 bg-opacity-50 px-3 py-1 rounded" id="currentTarget">
+                        https://example.com
+                    </div>
+                </div>
+                <iframe id="targetFrame" src="https://example.com" 
+                    class="w-full h-80 target-frame"></iframe>
+            </div>
+
+            <div class="card p-6 rounded-lg">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
+                    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-clipboard-list text-red-400"></i> Результаты тестирования
+                    </h2>
+                    <div class="flex gap-2">
+                        <button id="clearResultsBtn" class="btn-secondary p-3 rounded-lg flex items-center">
+                            <i class="fas fa-trash mr-2"></i> Очистить
+                        </button>
+                        <button id="stopTestsBtn" class="btn-secondary p-3 rounded-lg flex items-center">
+                            <i class="fas fa-stop mr-2"></i> Стоп
+                        </button>
+                        <button id="exportCSV" class="btn-secondary p-3 rounded-lg flex items-center">
+                            <i class="fas fa-file-csv mr-2"></i> CSV
+                        </button>
+                    </div>
+                </div>
+                <div id="results" class="results-container space-y-3 pr-2"></div>
+            </div>
+        </div>
+
+        <!-- Модальные окна -->
+        <!-- Payload Encoder/Decoder Modal -->
+        <div id="payloadModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50 p-4">
+            <div class="modal-content p-6 w-full max-w-md">
+                <h3 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-2">
+                    <i class="fas fa-lock text-red-400"></i> Кодирование/Декодирование Payload
+                </h3>
+                <textarea id="payloadInput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" 
+                    rows="4" placeholder="Введите payload"></textarea>
+                
+                <select id="encodingType" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                    <option value="url">URL Encode</option>
+                    <option value="base64">Base64 Encode</option>
+                    <option value="hex">Hex Encode</option>
+                    <option value="html">HTML Encode</option>
+                    <option value="urlDecode">URL Decode</option>
+                    <option value="base64Decode">Base64 Decode</option>
+                    <option value="hexDecode">Hex Decode</option>
+                    <option value="htmlDecode">HTML Decode</option>
+                </select>
+                
+                <button id="processPayload" class="btn-primary w-full p-3 rounded-lg">
+                    <i class="fas fa-cog"></i> Обработать
+                </button>
+                
+                <textarea id="payloadOutput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mt-4" 
+                    rows="4" readonly placeholder="Результат"></textarea>
+                
+                <button id="closeModal" class="btn-secondary w-full p-3 mt-4 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-times mr-2"></i> Закрыть
+                </button>
+            </div>
+        </div>
+
+        <!-- Hash Generator Modal -->
+        <div id="hashModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50 p-4">
+            <div class="modal-content p-6 w-full max-w-md">
+                <h3 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-2">
+                    <i class="fas fa-hashtag text-red-400"></i> Генератор хешей
+                </h3>
+                <textarea id="hashInput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" 
+                    rows="4" placeholder="Введите текст для хеширования"></textarea>
+                
+                <select id="hashType" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                    <option value="md5">MD5</option>
+                    <option value="sha1">SHA-1</option>
+                    <option value="sha256">SHA-256</option>
+                    <option value="sha512">SHA-512</option>
+                    <option value="sha3">SHA3-512</option>
+                </select>
+                
+                <button id="generateHash" class="btn-primary w-full p-3 rounded-lg">
+                    <i class="fas fa-cog"></i> Сгенерировать
+                </button>
+                
+                <textarea id="hashOutput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mt-4" 
+                    rows="4" readonly placeholder="Результат"></textarea>
+                
+                <button id="closeHashModal" class="btn-secondary w-full p-3 mt-4 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-times mr-2"></i> Закрыть
+                </button>
+            </div>
+        </div>
+
+        <!-- JWT Decoder Modal -->
+        <div id="jwtModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50 p-4">
+            <div class="modal-content p-6 w-full max-w-md">
+                <h3 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-2">
+                    <i class="fas fa-key text-red-400"></i> Декодер JWT
+                </h3>
+                <textarea id="jwtInput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" 
+                    rows="4" placeholder="Введите JWT токен"></textarea>
+                
+                <button id="decodeJWT" class="btn-primary w-full p-3 rounded-lg">
+                    <i class="fas fa-cog"></i> Декодировать
+                </button>
+                
+                <div class="mt-4">
+                    <h4 class="font-semibold mb-2">Header:</h4>
+                    <pre id="jwtHeader" class="bg-red-900 bg-opacity-30 p-3 rounded text-sm overflow-auto max-h-32"></pre>
+                </div>
+                
+                <div class="mt-4">
+                    <h4 class="font-semibold mb-2">Payload:</h4>
+                    <pre id="jwtPayload" class="bg-red-900 bg-opacity-30 p-3 rounded text-sm overflow-auto max-h-64"></pre>
+                </div>
+                
+                <button id="closeJwtModal" class="btn-secondary w-full p-3 mt-4 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-times mr-2"></i> Закрыть
+                </button>
+            </div>
+        </div>
+
+        <!-- Payload Generator Modal -->
+        <div id="payloadGenModal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex items-center justify-center z-50 p-4">
+            <div class="modal-content p-6 w-full max-w-xl">
+                <h3 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-2">
+                    <i class="fas fa-code text-red-400"></i> Генератор Payload
+                </h3>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block mb-2">Тип Payload</label>
+                        <select id="payloadType" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            <option value="xss">XSS</option>
+                            <option value="sql">SQL Injection</option>
+                            <option value="command">Command Injection</option>
+                            <option value="ssti">SSTI</option>
+                            <option value="xxe">XXE</option>
+                            <option value="openredirect">Open Redirect</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block mb-2">Кодирование</label>
+                        <select id="payloadEncoding" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            <option value="none">Нет</option>
+                            <option value="url">URL</option>
+                            <option value="base64">Base64</option>
+                            <option value="html">HTML</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="payloadOptions" class="mb-4">
+                    <!-- Динамические опции будут добавляться сюда -->
+                </div>
+                
+                <textarea id="generatedPayload" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-4" 
+                    rows="6" readonly placeholder="Сгенерированный payload"></textarea>
+                
+                <button id="copyPayload" class="btn-primary w-full p-3 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-copy mr-2"></i> Копировать
+                </button>
+                
+                <button id="closePayloadModal" class="btn-secondary w-full p-3 mt-4 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-times mr-2"></i> Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const targetInput = document.getElementById('targetInput');
+        const targetFrame = document.getElementById('targetFrame');
+        const currentTargetEl = document.getElementById('currentTarget');
+        const statusEl = document.getElementById('status');
+        const testsCounterEl = document.getElementById('testsCounter');
+        const resultsDiv = document.getElementById('results');
+        const payloadModal = document.getElementById('payloadModal');
+        const payloadInput = document.getElementById('payloadInput');
+        const payloadOutput = document.getElementById('payloadOutput');
+        const encodingType = document.getElementById('encodingType');
+        const stopTestsBtn = document.getElementById('stopTestsBtn');
+        const hashModal = document.getElementById('hashModal');
+        const hashInput = document.getElementById('hashInput');
+        const hashOutput = document.getElementById('hashOutput');
+        const hashType = document.getElementById('hashType');
+        const globalProgress = document.getElementById('globalProgress');
+        const jwtModal = document.getElementById('jwtModal');
+        const payloadGenModal = document.getElementById('payloadGenModal');
+
+        // State Variables
+        let baseUrl = 'https://example.com';
+        let domain = 'https://example.com';
+        let isTesting = false;
+        let testsCounter = 0;
+        let wafDetected = false;
+        let currentTest = null;
+        let activeTests = [];
+        let testQueue = [];
+        let testResults = [];
+        let bookmarks = JSON.parse(localStorage.getItem('scanBookmarks')) || [];
+
+        // CORS Proxy
+        const corsProxy = "https://cors-anywhere.herokuapp.com/";
+
+        // Safe XSS payloads
+        const safeXssPayloads = [
+            '?input=<div>Test</div>',
+            '?input=<span style="color:red">Test</span>',
+            '?input="><b>Test</b>',
+            '?input=<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onload="console.log(\'Image loaded\')">'
+        ];
+
+        // Safe postMessage payloads
+        const safePostMessagePayloads = [
+            'test message',
+            JSON.stringify({ action: 'test', safe: true }),
+            '<div>Safe HTML</div>',
+            '{ "type": "test", "data": "safe" }',
+            'heartbleed-scanner-test'
+        ];
+
+        // Initialize
+        window.addEventListener('load', () => {
+            loadResults();
+            updateBookmarks();
+            addResult('Heartbleed Security Scanner PRO готов к работе', 'info', 'info-circle');
+        });
+
+        // Update URL and iframe
+        targetInput.addEventListener('change', function() {
+            const url = targetInput.value.trim();
+            if (url) {
+                try {
+                    const parsedUrl = new URL(url);
+                    baseUrl = parsedUrl.href;
+                    domain = parsedUrl.origin;
+                    targetFrame.src = baseUrl;
+                    currentTargetEl.textContent = baseUrl;
+                    addResult(`Цель обновлена: ${baseUrl}`, 'info', 'globe');
+                } catch (e) {
+                    addResult(`Ошибка URL: ${e.message}`, 'warning', 'exclamation-circle');
+                }
+            }
+        });
+
+        // Update status text
+        function updateStatus(text, testing = false) {
+            statusEl.textContent = text;
+            statusEl.parentElement.className = testing ? 
+                'status-badge bg-yellow-900 text-yellow-300' : 
+                'status-badge bg-green-900 text-green-300';
+        }
+
+        // Add result to results section
+        function addResult(message, level = 'info', icon = 'info-circle') {
+            testsCounter++;
+            testsCounterEl.textContent = testsCounter;
+            
+            const resultId = 'result-' + Date.now();
+            const result = document.createElement('div');
+            result.className = `p-3 rounded flex items-start gap-3 result-${level}`;
+            result.id = resultId;
+            result.innerHTML = `
+                <i class="fas fa-${icon} mt-1 text-${level === 'critical' ? 'danger' : level}"></i>
+                <div class="flex-1">
+                    <p class="text-sm">${sanitizeHTML(message)}</p>
+                    <span class="text-xs opacity-75 mt-1 block">${new Date().toLocaleTimeString()}</span>
+                </div>
+            `;
+            
+            resultsDiv.appendChild(result);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+            saveResults();
+            
+            // Add to test results for export
+            testResults.push({
+                id: resultId,
+                message: message,
+                level: level,
+                icon: icon,
+                timestamp: new Date().toISOString()
+            });
+            
+            return resultId;
+        }
+
+        // HTML sanitizer to prevent XSS
+        function sanitizeHTML(str) {
+            const temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        }
+
+        // Save results to localStorage
+        function saveResults() {
+            const resultsHTML = resultsDiv.innerHTML;
+            localStorage.setItem('scanResults', resultsHTML);
+            localStorage.setItem('scanResultsData', JSON.stringify(testResults));
+        }
+
+        // Load saved results from localStorage
+        function loadResults() {
+            const savedResults = localStorage.getItem('scanResults');
+            const savedResultsData = localStorage.getItem('scanResultsData');
+            
+            if (savedResults) {
+                resultsDiv.innerHTML = savedResults;
+                testsCounter = resultsDiv.children.length;
+                testsCounterEl.textContent = testsCounter;
+            }
+            
+            if (savedResultsData) {
+                testResults = JSON.parse(savedResultsData);
+            }
+        }
+
+        // Check for WAF presence
+        async function checkWaf() {
+            try {
+                const response = await fetchWithProxy(domain);
+                if (!response) return null;
+                
+                const server = response.headers.get('Server')?.toLowerCase() || '';
+                const wafSignatures = {
+                    'cloudflare': ['cf-ray', 'cf-cache-status', 'cloudflare'],
+                    'akamai': ['akamai', 'x-akamai'],
+                    'f5': ['f5', 'x-f5'],
+                    'imperva': ['x-iinfo', 'incapsula'],
+                    'sucuri': ['sucuri', 'x-sucuri'],
+                    'aws': ['x-amz', 'aws'],
+                    'incapsula': ['x-incap', 'incapsula'],
+                    'fortinet': ['fortigate']
+                };
+                
+                for (const [waf, signatures] of Object.entries(wafSignatures)) {
+                    if (server.includes(waf) || signatures.some(sig => response.headers.get(sig))) {
+                        return waf.charAt(0).toUpperCase() + waf.slice(1);
+                    }
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Fetch with CORS proxy
+        async function fetchWithProxy(url, options = {}) {
+            try {
+                const proxyUrl = corsProxy + url;
+                const response = await fetch(proxyUrl, {
+                    ...options,
+                    headers: {
+                        ...options.headers,
+                        'X-Requested-With': 'HeartbleedScanner'
+                    }
+                });
+                return response;
+            } catch (error) {
+                addResult(`Ошибка сети: ${error.message}`, 'warning', 'exclamation-circle');
+                return null;
+            }
+        }
+
+        // Update progress bar
+        function updateProgress(percent) {
+            globalProgress.style.width = percent + '%';
+        }
+
+        // Test postMessage vulnerabilities
+        async function postMessageTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'postMessage';
+            updateStatus('Тестирование postMessage...', true);
+            const testId = addResult('Начало тестирования postMessage', 'info', 'envelope');
+            
+            for (const [i, payload] of safePostMessagePayloads.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / safePostMessagePayloads.length) * 100);
+                
+                const testStepId = addResult(`Отправка сообщения #${i + 1}`, 'info', 'paper-plane');
+                
+                try {
+                    if (targetFrame.contentWindow) {
+                        targetFrame.contentWindow.postMessage(payload, domain);
+                        addResult(`Сообщение отправлено`, 'success', 'check-circle');
+                    } else {
+                        addResult(`Ошибка: iframe не загружен`, 'warning', 'exclamation-circle');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка postMessage: ${error.message}`, 'warning', 'exclamation-circle');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test XSS vulnerabilities
+        async function xssTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'xss';
+            updateStatus('Тестирование XSS...', true);
+            const testId = addResult('Начало тестирования XSS', 'info', 'bug');
+            
+            for (const [i, payload] of safeXssPayloads.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / safeXssPayloads.length) * 100);
+                
+                const testStepId = addResult(`Тестирование #${i + 1}`, 'info', 'search');
+                
+                try {
+                    const response = await fetchWithProxy(`${baseUrl}${payload}`);
+                    if (!response) continue;
+                    
+                    const content = await response.text();
+                    const payloadPattern = payload.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    
+                    if (new RegExp(payloadPattern, 'i').test(content)) {
+                        addResult(`⚠️ Возможный XSS: payload отражен`, 'warning', 'radiation');
+                        document.getElementById(testStepId).classList.add('result-warning');
+                    } else {
+                        addResult(`XSS не обнаружен`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка XSS: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test Open Redirect vulnerabilities
+        async function openRedirectTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'openRedirect';
+            updateStatus('Тестирование Open Redirect...', true);
+            const testId = addResult('Начало тестирования Open Redirect', 'info', 'route');
+            
+            const payloads = [
+                '?redirect=https://google.com',
+                '?url=https://example.com',
+                '?next=https://microsoft.com',
+                '?return=https://wikipedia.org'
+            ];
+            
+            for (const [i, payload] of payloads.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / payloads.length) * 100);
+                
+                const testStepId = addResult(`Тестирование #${i + 1}: ${payload}`, 'info', 'external-link-alt');
+                
+                try {
+                    const response = await fetchWithProxy(`${baseUrl}${payload}`, { 
+                        redirect: 'manual'
+                    });
+                    
+                    if (!response) continue;
+                    
+                    if ([301, 302, 303, 307, 308].includes(response.status)) {
+                        const location = response.headers.get('Location');
+                        if (location && location !== baseUrl) {
+                            addResult(`⚠️ Возможный Open Redirect: ${location}`, 'warning', 'radiation');
+                            document.getElementById(testStepId).classList.add('result-warning');
+                        } else {
+                            addResult(`Open Redirect не обнаружен`, 'success', 'shield-check');
+                            document.getElementById(testStepId).classList.add('result-success');
+                        }
+                    } else {
+                        addResult(`Open Redirect не обнаружен`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка Open Redirect: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test CORS configuration
+        async function corsTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'cors';
+            updateStatus('Тестирование CORS...', true);
+            const testId = addResult('Начало тестирования CORS', 'info', 'lock-open');
+            
+            const testOrigin = 'https://example-scanner.com';
+            const endpoints = ['/api/user', '/api/data', '/graphql', '/api/v1', '/', '/api/auth', '/api/config'];
+            
+            for (const [i, endpoint] of endpoints.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / endpoints.length) * 100);
+                
+                const testStepId = addResult(`Тестирование ${endpoint}`, 'info', 'shield-alt');
+                
+                try {
+                    const response = await fetchWithProxy(`${domain}${endpoint}`, {
+                        method: 'OPTIONS',
+                        headers: {
+                            'Origin': testOrigin,
+                            'Access-Control-Request-Method': 'GET'
+                        }
+                    });
+                    
+                    if (!response) continue;
+                    
+                    const acao = response.headers.get('Access-Control-Allow-Origin');
+                    const acac = response.headers.get('Access-Control-Allow-Credentials');
+                    
+                    if (acao === '*' || (acao === testOrigin && acac === 'true')) {
+                        addResult(`⚠️ Уязвимость CORS: ${acao}, Credentials: ${acac}`, 'critical', 'radiation');
+                        document.getElementById(testStepId).classList.add('result-critical');
+                    } else {
+                        addResult(`Безопасная конфигурация CORS`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка CORS: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(1000);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test LFI/RFI vulnerabilities
+        async function lfiTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'lfi';
+            updateStatus('Тестирование LFI/RFI...', true);
+            const testId = addResult('Начало тестирования LFI/RFI', 'info', 'file');
+            
+            const payloads = [
+                '?file=../../../../etc/passwd',
+                '?include=/etc/passwd',
+                '?page=file:///etc/passwd'
+            ];
+            
+            for (const [i, payload] of payloads.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / payloads.length) * 100);
+                
+                const testStepId = addResult(`Тестирование #${i + 1}: ${payload}`, 'info', 'search');
+                
+                try {
+                    const response = await fetchWithProxy(`${baseUrl}${payload}`);
+                    if (!response) continue;
+                    
+                    const content = await response.text();
+                    
+                    if (content.toLowerCase().includes('root') && 
+                        content.toLowerCase().includes('/bin') && 
+                        content.includes(':')) {
+                        addResult(`⚠️ Возможная LFI/RFI уязвимость`, 'critical', 'radiation');
+                        document.getElementById(testStepId).classList.add('result-critical');
+                    } else {
+                        addResult(`LFI/RFI не обнаружен`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка LFI/RFI: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test IDOR vulnerabilities
+        async function idorTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'idor';
+            updateStatus('Тестирование IDOR...', true);
+            const testId = addResult('Начало тестирования IDOR', 'info', 'id-card');
+            
+            const endpoints = [
+                '/api/user/1',
+                '/api/user/2',
+                '/api/user/100'
+            ];
+            
+            for (const [i, endpoint] of endpoints.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / endpoints.length) * 100);
+                
+                const testStepId = addResult(`Тестирование ${endpoint}`, 'info', 'search');
+                
+                try {
+                    const response = await fetchWithProxy(`${domain}${endpoint}`);
+                    if (!response) continue;
+                    
+                    if (response.status === 200) {
+                        addResult(`⚠️ Возможная IDOR уязвимость в ${endpoint}`, 'warning', 'radiation');
+                        document.getElementById(testStepId).classList.add('result-warning');
+                    } else if (response.status === 403 || response.status === 401) {
+                        addResult(`Доступ запрещен (хороший признак)`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    } else {
+                        addResult(`IDOR не обнаружен в ${endpoint}`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка IDOR: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test SQL Injection vulnerabilities
+        async function sqliTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'sqli';
+            updateStatus('Тестирование SQL Injection...', true);
+            const testId = addResult('Начало тестирования SQLi', 'info', 'database');
+            
+            const payloads = [
+                "?id=1'",
+                "?id=1 OR 1=1",
+                "?search=test"
+            ];
+            
+            for (const [i, payload] of payloads.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / payloads.length) * 100);
+                
+                const testStepId = addResult(`Тестирование #${i + 1}: ${payload}`, 'info', 'search');
+                
+                try {
+                    const response = await fetchWithProxy(`${baseUrl}${payload}`);
+                    if (!response) continue;
+                    
+                    const content = await response.text();
+                    
+                    if (content.includes('error') && (content.includes('sql') || content.includes('syntax'))) {
+                        addResult(`⚠️ Возможная SQLi уязвимость`, 'critical', 'radiation');
+                        document.getElementById(testStepId).classList.add('result-critical');
+                    } else {
+                        addResult(`SQLi не обнаружен`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка SQLi: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test CSRF vulnerabilities
+        async function csrfTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'csrf';
+            updateStatus('Тестирование CSRF...', true);
+            const testId = addResult('Начало тестирования CSRF', 'info', 'link');
+            
+            const endpoints = ['/api/update', '/api/submit'];
+            
+            for (const [i, endpoint] of endpoints.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / endpoints.length) * 100);
+                
+                const testStepId = addResult(`Тестирование ${endpoint}`, 'info', 'search');
+                
+                try {
+                    const response = await fetchWithProxy(`${domain}${endpoint}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'test=1'
+                    });
+                    
+                    if (!response) continue;
+                    
+                    if (response.status === 200 || response.status === 204) {
+                        addResult(`⚠️ Возможная CSRF уязвимость: запрос выполнен без токена`, 'warning', 'radiation');
+                        document.getElementById(testStepId).classList.add('result-warning');
+                    } else {
+                        addResult(`CSRF защита обнаружена`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка CSRF: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test CSP configuration
+        async function cspTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'csp';
+            updateStatus('Тестирование CSP...', true);
+            const testId = addResult('Начало тестирования CSP', 'info', 'shield-alt');
+            
+            try {
+                const response = await fetchWithProxy(domain);
+                if (!response) return;
+                
+                const csp = response.headers.get('Content-Security-Policy');
+                
+                if (!csp) {
+                    addResult(`⚠️ CSP отсутствует`, 'warning', 'exclamation-circle');
+                } else if (csp.includes('unsafe-inline') || csp.includes('unsafe-eval')) {
+                    addResult(`⚠️ Слабая CSP политика: ${csp.substring(0, 50)}...`, 'warning', 'radiation');
+                } else {
+                    addResult(`Надежная CSP политика обнаружена`, 'success', 'shield-check');
+                }
+            } catch (error) {
+                addResult(`Ошибка CSP: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test SSRF vulnerabilities
+        async function ssrfTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'ssrf';
+            updateStatus('Тестирование SSRF...', true);
+            const testId = addResult('Начало тестирования SSRF', 'info', 'server');
+            
+            const payloads = [
+                '?url=http://example.com',
+                '?file=http://example.com'
+            ];
+            
+            for (const [i, payload] of payloads.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / payloads.length) * 100);
+                
+                const testStepId = addResult(`Тестирование #${i + 1}: ${payload}`, 'info', 'search');
+                
+                try {
+                    const response = await fetchWithProxy(`${baseUrl}${payload}`);
+                    if (!response) continue;
+                    
+                    if (response.status === 200) {
+                        addResult(`⚠️ Возможная SSRF уязвимость`, 'critical', 'radiation');
+                        document.getElementById(testStepId).classList.add('result-critical');
+                    } else {
+                        addResult(`SSRF не обнаружен`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка SSRF: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test XXE vulnerabilities
+        async function xxeTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'xxe';
+            updateStatus('Тестирование XXE...', true);
+            const testId = addResult('Начало тестирования XXE', 'info', 'file-code');
+            
+            const payloads = [
+                `<?xml version="1.0"?><data>test</data>`,
+                `<?xml version="1.0"?><!DOCTYPE data [<!ENTITY test "safe">]><data>&test;</data>`
+            ];
+            
+            for (const [i, payload] of payloads.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / payloads.length) * 100);
+                
+                const testStepId = addResult(`Тестирование #${i + 1}: XML payload`, 'info', 'search');
+                
+                try {
+                    const response = await fetchWithProxy(`${domain}/api/xml`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/xml' },
+                        body: payload
+                    });
+                    
+                    if (!response) continue;
+                    
+                    if (response.status === 500 || response.status === 400) {
+                        addResult(`⚠️ Возможная XXE уязвимость`, 'critical', 'radiation');
+                        document.getElementById(testStepId).classList.add('result-critical');
+                    } else {
+                        addResult(`XXE не обнаружен`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка XXE: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test File Upload vulnerabilities
+        async function fileUploadTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'fileUpload';
+            updateStatus('Тестирование File Upload...', true);
+            const testId = addResult('Начало тестирования File Upload', 'info', 'upload');
+            
+            const payloads = [
+                { name: 'test.txt', content: 'Safe content' },
+                { name: 'test.jpg', content: 'Safe image content' }
+            ];
+            
+            for (const [i, payload] of payloads.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / payloads.length) * 100);
+                
+                const testStepId = addResult(`Тестирование #${i + 1}: ${payload.name}`, 'info', 'search');
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('file', new Blob([payload.content], { type: 'text/plain' }), payload.name);
+                    
+                    const response = await fetchWithProxy(`${domain}/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response) continue;
+                    
+                    if (response.status === 200) {
+                        const result = await response.json();
+                        if (result.path) {
+                            addResult(`Файл загружен: ${result.path}`, 'info', 'info-circle');
+                        }
+                    } else {
+                        addResult(`Ошибка загрузки файла: ${response.status}`, 'warning', 'exclamation-circle');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка File Upload: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test WAF presence
+        async function wafTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'waf';
+            updateStatus('Проверка WAF...', true);
+            const testId = addResult('Начало проверки WAF', 'info', 'shield-alt');
+            
+            try {
+                const wafName = await checkWaf();
+                if (wafName) {
+                    wafDetected = true;
+                    addResult(`Обнаружен WAF: ${wafName}`, 'warning', 'shield-alt');
+                } else {
+                    addResult('WAF не обнаружен', 'success', 'shield-check');
+                }
+            } catch (error) {
+                addResult(`Ошибка WAF: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // View source code
+        async function viewSource() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'viewSource';
+            updateStatus('Получение исходного кода...', true);
+            const testId = addResult('Попытка получения исходного кода', 'info', 'code');
+            
+            try {
+                const response = await fetchWithProxy(baseUrl);
+                if (!response) return;
+                
+                const source = await response.text();
+                
+                const win = window.open('', '_blank');
+                win.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Source: ${baseUrl}</title>
+                        <style>
+                            body { font-family: monospace; background: #1a202c; color: #e2e8f0; padding: 20px; }
+                            pre { white-space: pre-wrap; word-break: break-all; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Source: ${baseUrl}</h1>
+                        <pre>${source.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                    </body>
+                    </html>
+                `);
+                
+                addResult('Исходный код открыт в новой вкладке', 'success', 'external-link-alt');
+            } catch (error) {
+                addResult(`Ошибка получения кода: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test security headers
+        async function headerTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'header';
+            updateStatus('Проверка заголовков...', true);
+            const testId = addResult('Начало проверки заголовков', 'info', 'list-alt');
+            
+            try {
+                const response = await fetchWithProxy(domain);
+                if (!response) return;
+                
+                const headers = response.headers;
+                
+                const securityHeaders = [
+                    'X-Content-Type-Options',
+                    'X-Frame-Options',
+                    'X-XSS-Protection',
+                    'Strict-Transport-Security',
+                    'Content-Security-Policy',
+                    'Referrer-Policy',
+                    'Permissions-Policy',
+                    'Cross-Origin-Opener-Policy',
+                    'Cross-Origin-Resource-Policy'
+                ];
+                
+                let missingHeaders = [];
+                securityHeaders.forEach(header => {
+                    if (!headers.get(header)) {
+                        missingHeaders.push(header);
+                    }
+                });
+                
+                if (missingHeaders.length > 0) {
+                    addResult(`⚠️ Отсутствуют заголовки безопасности: ${missingHeaders.join(', ')}`, 'warning', 'exclamation-circle');
+                } else {
+                    addResult('Все ключевые заголовки безопасности присутствуют', 'success', 'shield-check');
+                }
+                
+                // Log all security headers
+                securityHeaders.forEach(header => {
+                    const value = headers.get(header);
+                    if (value) {
+                        addResult(`${header}: ${value}`, 'info', 'info-circle');
+                    }
+                });
+                
+            } catch (error) {
+                addResult(`Ошибка проверки заголовков: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test cookies security
+        async function cookieTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'cookie';
+            updateStatus('Проверка Cookies...', true);
+            const testId = addResult('Начало проверки Cookies', 'info', 'cookie');
+            
+            try {
+                const response = await fetchWithProxy(domain);
+                if (!response) return;
+                
+                const cookies = response.headers.get('Set-Cookie');
+                
+                if (!cookies) {
+                    addResult('Cookies не установлены', 'info', 'info-circle');
+                    isTesting = false;
+                    currentTest = null;
+                    updateStatus('Готов к тестированию');
+                    return;
+                }
+                
+                const cookieList = cookies.split(',').map(c => c.trim());
+                let issuesFound = false;
+                
+                cookieList.forEach(cookie => {
+                    const flags = cookie.split(';').map(flag => flag.trim().toLowerCase());
+                    const secure = flags.includes('secure');
+                    const httpOnly = flags.includes('httponly');
+                    const sameSite = flags.find(flag => flag.startsWith('samesite'));
+                    
+                    if (!secure) {
+                        addResult(`⚠️ Cookie не имеет флага Secure: ${cookie.split(';')[0]}`, 'warning', 'exclamation-circle');
+                        issuesFound = true;
+                    }
+                    if (!httpOnly) {
+                        addResult(`⚠️ Cookie не имеет флага HttpOnly: ${cookie.split(';')[0]}`, 'warning', 'exclamation-circle');
+                        issuesFound = true;
+                    }
+                    if (!sameSite || (sameSite && !sameSite.includes('lax') && !sameSite.includes('strict'))) {
+                        addResult(`⚠️ Cookie не имеет правильного флага SameSite: ${cookie.split(';')[0]}`, 'warning', 'exclamation-circle');
+                        issuesFound = true;
+                    }
+                });
+                
+                if (!issuesFound) {
+                    addResult('Все cookies имеют правильные настройки безопасности', 'success', 'shield-check');
+                }
+            } catch (error) {
+                addResult(`Ошибка проверки Cookies: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Subdomain scanning
+        async function subdomainTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'subdomain';
+            updateStatus('Сканирование субдоменов...', true);
+            const testId = addResult('Начало сканирования субдоменов', 'info', 'sitemap');
+            
+            try {
+                const domainParts = new URL(domain).hostname.split('.');
+                const mainDomain = domainParts.slice(-2).join('.');
+                
+                const subdomains = ['www', 'mail', 'admin', 'test', 'dev', 'api', 'app', 'blog', 'shop', 'support', 'secure', 'vpn', 'owa', 'webmail'];
+                
+                for (const [i, sub] of subdomains.entries()) {
+                    if (!isTesting) break;
+                    updateProgress((i / subdomains.length) * 100);
+                    
+                    const url = `https://${sub}.${mainDomain}`;
+                    const testStepId = addResult(`Проверка: ${url}`, 'info', 'search');
+                    
+                    try {
+                        const response = await fetchWithProxy(url, { method: 'HEAD' });
+                        if (response && response.status < 400) {
+                            addResult(`Субдомен найден: ${url}`, 'success', 'check-circle');
+                            document.getElementById(testStepId).classList.add('result-success');
+                        }
+                    } catch {
+                        // Ignore errors
+                    }
+                    
+                    await delay(300);
+                }
+                
+                addResult('Сканирование субдоменов завершено', 'success', 'flag-checkered');
+            } catch (error) {
+                addResult(`Ошибка сканирования субдоменов: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Test Brute Force vulnerabilities
+        async function bruteForceTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'bruteForce';
+            updateStatus('Тестирование Brute Force...', true);
+            const testId = addResult('Начало тестирования Brute Force', 'info', 'lock');
+            
+            const payloads = ['admin:admin', 'admin:password', 'user:123456', 'test:test', 'guest:guest'];
+            
+            for (const [i, payload] of payloads.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / payloads.length) * 100);
+                
+                const testStepId = addResult(`Тестирование #${i + 1}: ${payload}`, 'info', 'search');
+                
+                try {
+                    const [username, password] = payload.split(':');
+                    const response = await fetchWithProxy(`${domain}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                    });
+                    
+                    if (!response) continue;
+                    
+                    if (response.status === 200) {
+                        addResult(`⚠️ Возможная уязвимость Brute Force: ${payload}`, 'critical', 'radiation');
+                        document.getElementById(testStepId).classList.add('result-critical');
+                    } else if (response.status === 401 || response.status === 403) {
+                        addResult(`Неверные учетные данные`, 'info', 'info-circle');
+                        document.getElementById(testStepId).classList.add('result-info');
+                    } else {
+                        addResult(`Brute Force не обнаружен`, 'success', 'shield-check');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch (error) {
+                    addResult(`Ошибка Brute Force: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                await delay(800);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Perform DNS Lookup
+        async function dnsLookup() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'dns';
+            updateStatus('Выполнение DNS Lookup...', true);
+            const testId = addResult('Начало DNS Lookup', 'info', 'network-wired');
+            
+            try {
+                const hostname = new URL(domain).hostname;
+                const response = await fetchWithProxy(`https://cloudflare-dns.com/dns-query?name=${hostname}&type=A`, {
+                    headers: { 'Accept': 'application/dns-json' }
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                if (data.Answer && data.Answer.length > 0) {
+                    data.Answer.forEach(record => {
+                        addResult(`DNS Record: ${record.type} - ${record.data}`, 'info', 'info-circle');
+                    });
+                } else {
+                    addResult('DNS записи не найдены', 'warning', 'exclamation-circle');
+                }
+            } catch (error) {
+                addResult(`Ошибка DNS Lookup: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Perform WHOIS Lookup
+        async function whoisLookup() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'whois';
+            updateStatus('Выполнение WHOIS Lookup...', true);
+            const testId = addResult('Начало WHOIS Lookup', 'info', 'info-circle');
+            
+            try {
+                const hostname = new URL(domain).hostname;
+                const response = await fetchWithProxy(`https://api.whois.vu/?q=${hostname}`);
+                
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.registered) {
+                        addResult(`Домен зарегистрирован: ${data.registered}`, 'info', 'info-circle');
+                        addResult(`Регистратор: ${data.registrar}`, 'info', 'info-circle');
+                        if (data.whoisservers) {
+                            addResult(`Серверы WHOIS: ${data.whoisservers.join(', ')}`, 'info', 'info-circle');
+                        }
+                    } else {
+                        addResult('WHOIS данные не найдены', 'warning', 'exclamation-circle');
+                    }
+                } else {
+                    addResult('WHOIS данные не найдены', 'warning', 'exclamation-circle');
+                }
+            } catch (error) {
+                addResult(`Ошибка WHOIS Lookup: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Port Scanner
+        async function portScanner() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'portScan';
+            updateStatus('Сканирование портов...', true);
+            const testId = addResult('Начало сканирования портов', 'info', 'network-wired');
+            
+            const commonPorts = [21, 22, 23, 25, 53, 80, 110, 143, 443, 465, 587, 993, 995, 3306, 3389, 8080, 8443];
+            const hostname = new URL(domain).hostname;
+            
+            for (const [i, port] of commonPorts.entries()) {
+                if (!isTesting) break;
+                updateProgress((i / commonPorts.length) * 100);
+                
+                const testStepId = addResult(`Проверка порта ${port}`, 'info', 'search');
+                
+                try {
+                    // Используем прокси для обхода CORS
+                    const response = await fetchWithProxy(`http://${hostname}:${port}`, {
+                        method: 'HEAD'
+                    });
+                    
+                    if (response && response.status < 400) {
+                        addResult(`Порт ${port} открыт`, 'success', 'check-circle');
+                        document.getElementById(testStepId).classList.add('result-success');
+                    }
+                } catch {
+                    // Порт скорее всего закрыт
+                }
+                
+                await delay(300);
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+            document.getElementById(testId).classList.add('result-success');
+            addResult('Сканирование портов завершено', 'success', 'flag-checkered');
+        }
+
+        // Clickjacking test
+        async function clickjackingTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'clickjacking';
+            updateStatus('Тестирование Clickjacking...', true);
+            const testId = addResult('Начало тестирования Clickjacking', 'info', 'mouse-pointer');
+            
+            try {
+                const response = await fetchWithProxy(domain);
+                if (!response) return;
+                
+                const headers = response.headers;
+                const xFrameOptions = headers.get('X-Frame-Options');
+                const csp = headers.get('Content-Security-Policy');
+                
+                if (xFrameOptions || (csp && csp.includes('frame-ancestors'))) {
+                    addResult(`Защита от Clickjacking обнаружена: ${xFrameOptions || 'CSP frame-ancestors'}`, 'success', 'shield-check');
+                } else {
+                    addResult(`⚠️ Уязвимость к Clickjacking: отсутствует X-Frame-Options/CSP`, 'critical', 'radiation');
+                }
+            } catch (error) {
+                addResult(`Ошибка Clickjacking теста: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // JWT Analysis
+        async function jwtTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'jwt';
+            updateStatus('Анализ JWT...', true);
+            const testId = addResult('Начало анализа JWT', 'info', 'key');
+            
+            try {
+                const response = await fetchWithProxy(domain);
+                if (!response) return;
+                
+                const cookies = response.headers.get('Set-Cookie');
+                let jwtFound = false;
+                
+                if (cookies) {
+                    const cookieList = cookies.split(';');
+                    for (const cookie of cookieList) {
+                        if (cookie.includes('=')) {
+                            const [name, value] = cookie.split('=');
+                            if (value && value.split('.').length === 3) {
+                                jwtFound = true;
+                                addResult(`Найден JWT токен: ${name}`, 'info', 'key');
+                            }
+                        }
+                    }
+                }
+                
+                if (!jwtFound) {
+                    addResult('JWT токены не найдены', 'info', 'info-circle');
+                }
+            } catch (error) {
+                addResult(`Ошибка анализа JWT: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Session security test
+        async function sessionTest() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'session';
+            updateStatus('Проверка сессионной безопасности...', true);
+            const testId = addResult('Начало проверки сессионной безопасности', 'info', 'user-lock');
+            
+            try {
+                const response = await fetchWithProxy(domain);
+                if (!response) return;
+                
+                const cookies = response.headers.get('Set-Cookie');
+                let sessionIssues = false;
+                
+                if (cookies) {
+                    const cookieList = cookies.split(';');
+                    for (const cookie of cookieList) {
+                        if (cookie.toLowerCase().includes('session')) {
+                            if (!cookie.toLowerCase().includes('secure')) {
+                                addResult(`⚠️ Сессионная cookie без Secure флага: ${cookie}`, 'warning', 'exclamation-circle');
+                                sessionIssues = true;
+                            }
+                            if (!cookie.toLowerCase().includes('httponly')) {
+                                addResult(`⚠️ Сессионная cookie без HttpOnly флага: ${cookie}`, 'warning', 'exclamation-circle');
+                                sessionIssues = true;
+                            }
+                        }
+                    }
+                }
+                
+                if (!sessionIssues) {
+                    addResult('Сессионные cookies защищены', 'success', 'shield-check');
+                }
+            } catch (error) {
+                addResult(`Ошибка проверки сессий: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+            
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            document.getElementById(testId).classList.add('result-success');
+        }
+
+        // Generate hash
+        async function generateHash(text, algorithm) {
+            if (algorithm === 'md5') {
+                // Простая реализация MD5 (не для продакшн)
+                return 'MD5 requires a library';
+            }
+            
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            const hashBuffer = await crypto.subtle.digest(algorithm, data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Encode/Decode payload
+        function encodePayload(payload, type) {
+            try {
+                switch (type) {
+                    case 'url': return encodeURIComponent(payload);
+                    case 'base64': return btoa(unescape(encodeURIComponent(payload)));
+                    case 'hex': 
+                        return payload.split('')
+                            .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
+                            .join('');
+                    case 'html': 
+                        return payload.replace(/&/g, "&amp;")
+                            .replace(/</g, "&lt;")
+                            .replace(/>/g, "&gt;")
+                            .replace(/"/g, "&quot;")
+                            .replace(/'/g, "&#039;");
+                    case 'urlDecode': return decodeURIComponent(payload);
+                    case 'base64Decode': return decodeURIComponent(escape(atob(payload)));
+                    case 'hexDecode': 
+                        const hex = payload.replace(/\s/g, '');
+                        return hex.match(/.{1,2}/g)
+                            .map(hex => String.fromCharCode(parseInt(hex, 16)))
+                            .join('');
+                    case 'htmlDecode': 
+                        return payload.replace(/&amp;/g, "&")
+                            .replace(/&lt;/g, "<")
+                            .replace(/&gt;/g, ">")
+                            .replace(/&quot;/g, '"')
+                            .replace(/&#039;/g, "'");
+                    default: return payload;
+                }
+            } catch (error) {
+                addResult(`Ошибка обработки payload: ${error.message}`, 'warning', 'exclamation-circle');
+                return `Ошибка: ${error.message}`;
+            }
+        }
+
+        // Run all tests
+        async function runAllTests() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'all';
+            updateStatus('Запуск всех тестов...', true);
+            const testId = addResult('Начало комплексного тестирования', 'info', 'rocket');
+            
+            const tests = [
+                wafTest,
+                headerTest,
+                cookieTest,
+                subdomainTest,
+                postMessageTest,
+                xssTest,
+                openRedirectTest,
+                corsTest,
+                csrfTest,
+                cspTest,
+                lfiTest,
+                idorTest,
+                sqliTest,
+                ssrfTest,
+                xxeTest,
+                fileUploadTest,
+                clickjackingTest,
+                jwtTest,
+                sessionTest
+            ];
+            
+            for (const [index, test] of tests.entries()) {
+                if (!isTesting) break;
+                updateProgress((index / tests.length) * 100);
+                
+                const testName = test.name.replace(/([A-Z])/g, ' $1').trim();
+                const testStepId = addResult(`Запуск: ${testName}`, 'info', 'play-circle');
+                
+                try {
+                    await test();
+                    document.getElementById(testStepId).classList.add('result-success');
+                } catch (error) {
+                    addResult(`Ошибка в тесте ${testName}: ${error.message}`, 'warning', 'exclamation-circle');
+                    document.getElementById(testStepId).classList.add('result-warning');
+                }
+                
+                await delay(1500);
+            }
+            
+            if (isTesting) {
+                addResult('Тестирование завершено', 'success', 'flag-checkered');
+                isTesting = false;
+                currentTest = null;
+                updateStatus('Готов к тестированию');
+                updateProgress(0);
+                document.getElementById(testId).classList.add('result-success');
+            }
+        }
+
+        // Stop all tests
+        function stopTests() {
+            if (isTesting) {
+                isTesting = false;
+                addResult(`Тестирование ${currentTest ? currentTest + ' ' : ''}прервано пользователем`, 'warning', 'stop-circle');
+                updateStatus('Готов к тестированию');
+                currentTest = null;
+                updateProgress(0);
+            }
+        }
+
+        // Clear results
+        function clearResults() {
+            if (isTesting) return;
+            resultsDiv.innerHTML = '';
+            testsCounter = 0;
+            testsCounterEl.textContent = '0';
+            testResults = [];
+            localStorage.removeItem('scanResults');
+            localStorage.removeItem('scanResultsData');
+            addResult('Результаты очищены', 'success', 'broom');
+        }
+
+        // Export results to JSON
+        function exportResults() {
+            const blob = new Blob([JSON.stringify(testResults, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'scan_results.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addResult('Результаты экспортированы в JSON', 'success', 'download');
+        }
+
+        // Export results to CSV
+        function exportCSV() {
+            let csv = 'ID,Message,Level,Timestamp\n';
+            
+            testResults.forEach(result => {
+                csv += `"${result.id}","${result.message.replace(/"/g, '""')}","${result.level}","${result.timestamp}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'scan_results.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addResult('Результаты экспортированы в CSV', 'success', 'file-csv');
+        }
+
+        // Decode JWT
+        function decodeJWT(token) {
+            try {
+                const [header, payload, signature] = token.split('.');
+                const decodedHeader = JSON.parse(atob(header));
+                const decodedPayload = JSON.parse(atob(payload));
+                
+                return {
+                    header: decodedHeader,
+                    payload: decodedPayload,
+                    signature: signature
+                };
+            } catch (error) {
+                return { error: 'Invalid JWT format' };
+            }
+        }
+
+        // Update bookmarks
+        function updateBookmarks() {
+            const bookmarkBtn = document.getElementById('bookmarkBtn');
+            const isBookmarked = bookmarks.some(b => b.url === baseUrl);
+            
+            if (isBookmarked) {
+                bookmarkBtn.innerHTML = '<i class="fas fa-bookmark"></i>';
+            } else {
+                bookmarkBtn.innerHTML = '<i class="far fa-bookmark"></i>';
+            }
+        }
+
+        // Delay function
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Event Listeners
+        document.getElementById('scanUrl').addEventListener('click', () => {
+            targetInput.dispatchEvent(new Event('change'));
+        });
+
+        document.getElementById('encodePayload').addEventListener('click', () => {
+            payloadModal.classList.remove('hidden');
+            encodingType.value = 'url';
+        });
+
+        document.getElementById('decodePayload').addEventListener('click', () => {
+            payloadModal.classList.remove('hidden');
+            encodingType.value = 'urlDecode';
+        });
+
+        document.getElementById('processPayload').addEventListener('click', () => {
+            const input = payloadInput.value;
+            const type = encodingType.value;
+            payloadOutput.value = encodePayload(input, type);
+        });
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            payloadModal.classList.add('hidden');
+            payloadInput.value = '';
+            payloadOutput.value = '';
+        });
+
+        document.getElementById('hashGenerator').addEventListener('click', () => {
+            hashModal.classList.remove('hidden');
+        });
+
+        document.getElementById('closeHashModal').addEventListener('click', () => {
+            hashModal.classList.add('hidden');
+            hashInput.value = '';
+            hashOutput.value = '';
+        });
+
+        document.getElementById('generateHash').addEventListener('click', async () => {
+            const input = hashInput.value;
+            const type = hashType.value;
+            
+            if (!input) {
+                addResult('Введите текст для хеширования', 'warning', 'exclamation-circle');
+                return;
+            }
+            
+            try {
+                let algorithm;
+                switch (type) {
+                    case 'md5': 
+                        // Note: MD5 is not supported by Web Crypto API, using a simple polyfill
+                        hashOutput.value = 'MD5 requires a library (not shown here)';
+                        return;
+                    case 'sha1': algorithm = 'SHA-1'; break;
+                    case 'sha256': algorithm = 'SHA-256'; break;
+                    case 'sha512': algorithm = 'SHA-512'; break;
+                    case 'sha3': algorithm = 'SHA3-512'; break;
+                    default: algorithm = 'SHA-256';
+                }
+                
+                const hash = await generateHash(input, algorithm);
+                hashOutput.value = hash;
+                addResult(`Сгенерирован ${type} хеш`, 'success', 'hashtag');
+            } catch (error) {
+                hashOutput.value = `Ошибка: ${error.message}`;
+                addResult(`Ошибка генерации хеша: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+        });
+
+        document.getElementById('portScanner').addEventListener('click', portScanner);
+        document.getElementById('clickjackingTest').addEventListener('click', clickjackingTest);
+        document.getElementById('jwtTest').addEventListener('click', jwtTest);
+        document.getElementById('sessionTest').addEventListener('click', sessionTest);
+        document.getElementById('jwtDecoder').addEventListener('click', () => {
+            jwtModal.classList.remove('hidden');
+        });
+
+        document.getElementById('decodeJWT').addEventListener('click', () => {
+            const token = jwtInput.value;
+            const decoded = decodeJWT(token);
+            
+            if (decoded.error) {
+                jwtHeader.textContent = decoded.error;
+                jwtPayload.textContent = '';
+            } else {
+                jwtHeader.textContent = JSON.stringify(decoded.header, null, 2);
+                jwtPayload.textContent = JSON.stringify(decoded.payload, null, 2);
+            }
+        });
+
+        document.getElementById('closeJwtModal').addEventListener('click', () => {
+            jwtModal.classList.add('hidden');
+            jwtInput.value = '';
+            jwtHeader.textContent = '';
+            jwtPayload.textContent = '';
+        });
+
+        document.getElementById('payloadGenerator').addEventListener('click', () => {
+            payloadGenModal.classList.remove('hidden');
+            updatePayloadOptions();
+        });
+
+        document.getElementById('payloadType').addEventListener('change', updatePayloadOptions);
+        document.getElementById('payloadEncoding').addEventListener('change', generatePayload);
+        document.getElementById('copyPayload').addEventListener('click', () => {
+            const payload = document.getElementById('generatedPayload');
+            payload.select();
+            document.execCommand('copy');
+            addResult('Payload скопирован в буфер обмена', 'success', 'copy');
+        });
+
+        document.getElementById('closePayloadModal').addEventListener('click', () => {
+            payloadGenModal.classList.add('hidden');
+        });
+
+        document.getElementById('bookmarkBtn').addEventListener('click', () => {
+            const isBookmarked = bookmarks.some(b => b.url === baseUrl);
+            
+            if (isBookmarked) {
+                bookmarks = bookmarks.filter(b => b.url !== baseUrl);
+                addResult('Закладка удалена', 'info', 'bookmark');
+            } else {
+                bookmarks.push({
+                    url: baseUrl,
+                    title: `Сканирование: ${new Date().toLocaleString()}`
+                });
+                addResult('Закладка добавлена', 'success', 'bookmark');
+            }
+            
+            localStorage.setItem('scanBookmarks', JSON.stringify(bookmarks));
+            updateBookmarks();
+        });
+
+        document.getElementById('exportCSV').addEventListener('click', exportCSV);
+
+        window.addEventListener('message', function(event) {
+            if (!domain) return;
+            
+            try {
+                const targetDomain = new URL(domain).hostname;
+                const originDomain = new URL(event.origin).hostname;
+                
+                if (originDomain.includes(targetDomain)) {
+                    const data = typeof event.data === 'object' ? 
+                        JSON.stringify(event.data) : 
+                        event.data;
+                    
+                    addResult(`Получено сообщение: ${sanitizeHTML(data)}`, 'info', 'comment-alt');
+                }
+            } catch (e) {
+                addResult(`Ошибка обработки сообщения: ${e.message}`, 'warning', 'exclamation-circle');
+            }
+        });
+
+        // Assign event listeners to test buttons
+        document.getElementById('postMessageTest').addEventListener('click', postMessageTest);
+        document.getElementById('xssTest').addEventListener('click', xssTest);
+        document.getElementById('openRedirectTest').addEventListener('click', openRedirectTest);
+        document.getElementById('corsTest').addEventListener('click', corsTest);
+        document.getElementById('lfiTest').addEventListener('click', lfiTest);
+        document.getElementById('idorTest').addEventListener('click', idorTest);
+        document.getElementById('sqliTest').addEventListener('click', sqliTest);
+        document.getElementById('runAllTests').addEventListener('click', runAllTests);
+        document.getElementById('clearResultsBtn').addEventListener('click', clearResults);
+        stopTestsBtn.addEventListener('click', stopTests);
+        document.getElementById('wafTest').addEventListener('click', wafTest);
+        document.getElementById('viewSource').addEventListener('click', viewSource);
+        document.getElementById('headerTest').addEventListener('click', headerTest);
+        document.getElementById('cookieTest').addEventListener('click', cookieTest);
+        document.getElementById('subdomainTest').addEventListener('click', subdomainTest);
+        document.getElementById('csrfTest').addEventListener('click', csrfTest);
+        document.getElementById('cspTest').addEventListener('click', cspTest);
+        document.getElementById('ssrfTest').addEventListener('click', ssrfTest);
+        document.getElementById('xxeTest').addEventListener('click', xxeTest);
+        document.getElementById('fileUploadTest').addEventListener('click', fileUploadTest);
+        document.getElementById('bruteForceTest').addEventListener('click', bruteForceTest);
+        document.getElementById('dnsLookup').addEventListener('click', dnsLookup);
+        document.getElementById('whoisLookup').addEventListener('click', whoisLookup);
+        document.getElementById('exportResults').addEventListener('click', exportResults);
+
+        // Payload Generator Functions
+        function updatePayloadOptions() {
+            const type = document.getElementById('payloadType').value;
+            const optionsDiv = document.getElementById('payloadOptions');
+            optionsDiv.innerHTML = '';
+            
+            switch (type) {
+                case 'xss':
+                    optionsDiv.innerHTML = `
+                        <label class="block mb-2">Тип XSS</label>
+                        <select id="xssType" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            <option value="basic">Базовый</option>
+                            <option value="img">Image Tag</option>
+                            <option value="svg">SVG</option>
+                        </select>
+                    `;
+                    break;
+                case 'sql':
+                    optionsDiv.innerHTML = `
+                        <label class="block mb-2">Тип БД</label>
+                        <select id="dbType" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            <option value="mysql">MySQL</option>
+                            <option value="mssql">SQL Server</option>
+                            <option value="oracle">Oracle</option>
+                            <option value="postgres">PostgreSQL</option>
+                        </select>
+                    `;
+                    break;
+                case 'ssti':
+                    optionsDiv.innerHTML = `
+                        <label class="block mb-2">Язык шаблонов</label>
+                        <select id="tplType" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            <option value="jinja2">Jinja2</option>
+                            <option value="twig">Twig</option>
+                            <option value="freemarker">FreeMarker</option>
+                        </select>
+                    `;
+                    break;
+            }
+            
+            generatePayload();
+        }
+
+        function generatePayload() {
+            const type = document.getElementById('payloadType').value;
+            const encoding = document.getElementById('payloadEncoding').value;
+            let payload = '';
+            
+            switch (type) {
+                case 'xss':
+                    const xssType = document.getElementById('xssType')?.value || 'basic';
+                    switch (xssType) {
+                        case 'img': payload = '<img src=x onerror=alert(1)>'; break;
+                        case 'svg': payload = '<svg onload=alert(1)>'; break;
+                    }
+                    break;
+                case 'sql':
+                    const dbType = document.getElementById('dbType')?.value || 'mysql';
+                    switch (dbType) {
+                        case 'mysql': payload = "' OR 1=1 -- "; break;
+                        case 'mssql': payload = "' OR 1=1 -- "; break;
+                        case 'oracle': payload = "' OR 1=1 -- "; break;
+                        case 'postgres': payload = "' OR 1=1 -- "; break;
+                    }
+                    break;
+                case 'command':
+                    payload = '; ls -la';
+                    break;
+                case 'ssti':
+                    const tplType = document.getElementById('tplType')?.value || 'jinja2';
+                    switch (tplType) {
+                        case 'jinja2': payload = '{{7*7}}'; break;
+                        case 'twig': payload = '{{7*7}}'; break;
+                        case 'freemarker': payload = '${7*7}'; break;
+                    }
+                    break;
+                case 'xxe':
+                    payload = '<!DOCTYPE test [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]><test>&xxe;</test>';
+                    break;
+                case 'openredirect':
+                    payload = 'https://google.com';
+                    break;
+            }
+            
+            // Apply encoding
+            if (encoding !== 'none') {
+                payload = encodePayload(payload, encoding);
+            }
+            
+            document.getElementById('generatedPayload').value = payload;
+        }
+
+        // Initialize payload generator
+        function initPayloadGenerator() {
+            updatePayloadOptions();
+        }
+
+        // Initialize
+        initPayloadGenerator();
+    </script>
+</body>
+</html>
